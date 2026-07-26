@@ -1,0 +1,45 @@
+name: Bug report
+description: Report a reproducible Axon deployment or control-panel problem
+title: "[Bug]: "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: Do not include passwords, access tokens, signing keys, private packet captures, or Matrix databases.
+  - type: dropdown
+    id: environment
+    attributes:
+      label: Environment
+      options:
+        - Windows 11 / Docker Desktop
+        - Ubuntu Server AMD64
+        - Debian AMD64
+        - Linux ARM64
+        - Private cloud / VPN
+        - Other
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Axon version
+      placeholder: 0.2.0
+    validations:
+      required: true
+  - type: textarea
+    id: behavior
+    attributes:
+      label: Observed behavior
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Reproduction steps
+    validations:
+      required: true
+  - type: textarea
+    id: diagnostics
+    attributes:
+      label: Sanitized diagnostics
+      description: Remove secrets, tokens, private addresses, and message content.

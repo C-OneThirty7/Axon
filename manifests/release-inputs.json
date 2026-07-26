@@ -1,0 +1,8 @@
+{
+  "synapseLatestReleaseApi": "https://api.github.com/repos/element-hq/synapse/releases/latest",
+  "synapseImage": "matrixdotorg/synapse",
+  "postgresImage": "postgres:18.4-alpine",
+  "nginxImage": "nginx:1.30.4-alpine3.24",
+  "dockerDesktopWindowsAmd64": "https://desktop.docker.com/win/main/amd64/Docker%20Desktop%20Installer.exe",
+  "wslLatestReleaseApi": "https://api.github.com/repos/microsoft/WSL/releases/latest"
+}

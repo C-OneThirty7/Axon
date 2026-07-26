@@ -1,0 +1,28 @@
+.worktrees/
+
+# Build output
+artifacts/
+bin/
+obj/
+dist/
+tmp/
+packages/
+images/
+release/
+
+# Local runtime and secrets
+.env
+data/
+/runtime/
+*.user
+*.suo
+
+# Local tooling and captures
+.DS_Store
+.idea/
+.vscode/
+*.pcap
+*.pcapng
+*.tar
+*.tar.gz
+*.zip

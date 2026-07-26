@@ -1,0 +1,229 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Axon Control</title>
+  <link rel="stylesheet" href="/app.css?v=4">
+</head>
+<body>
+  <div id="login" class="login-shell" hidden>
+    <form id="login-form" class="login-panel">
+      <div class="brand-mark">AX</div>
+      <p class="eyebrow">HOST-ONLY CONTROL</p>
+      <h1>Axon</h1>
+      <p class="muted">Sign in with a Matrix server-administrator account. Credentials are sent only to local Synapse and are not stored.</p>
+      <label>Administrator username
+        <input name="username" autocomplete="username" placeholder="admin or @admin:axon.home.arpa" required>
+      </label>
+      <label>Password
+        <input name="password" type="password" autocomplete="current-password" required>
+      </label>
+      <p id="login-error" class="form-error" role="alert"></p>
+      <button class="primary wide" type="submit">Open control</button>
+    </form>
+  </div>
+
+  <div id="shell" class="app-shell" hidden>
+    <aside>
+      <div class="brand">
+        <span class="brand-mark small">AX</span>
+        <span><b>Axon</b><small>Control</small></span>
+      </div>
+      <nav aria-label="Primary">
+        <button class="nav-item active" data-view="overview"><span>01</span>Overview</button>
+        <button class="nav-item" data-view="users"><span>02</span>Users</button>
+        <button class="nav-item" data-view="rooms"><span>03</span>Rooms</button>
+        <button class="nav-item" data-view="batch"><span>04</span>Batch issue</button>
+        <button class="nav-item" data-view="logs"><span>05</span>Logs</button>
+      </nav>
+      <div class="aside-footer">
+        <span id="operator">Not signed in</span>
+        <button id="logout" class="text-button">Sign out</button>
+      </div>
+    </aside>
+
+    <main>
+      <header>
+        <div>
+          <p class="eyebrow">AXON.HOME.ARPA</p>
+          <h1 id="view-title">System overview</h1>
+        </div>
+        <div class="header-status"><i id="health-dot"></i><span id="health-label">Checking stack</span></div>
+      </header>
+
+      <section id="view-overview" class="view active">
+        <div class="metrics">
+          <div><span>Synapse</span><strong id="synapse-state">Checking</strong></div>
+          <div><span>Accounts</span><strong id="account-total">-</strong></div>
+          <div><span>Rooms</span><strong id="room-total">-</strong></div>
+          <div><span>Recently active</span><strong id="recent-total">-</strong></div>
+        </div>
+        <div class="section-head">
+          <div>
+            <p class="eyebrow">RUNTIME</p>
+            <h2>Service control</h2>
+          </div>
+          <div class="button-group">
+            <button class="secondary" data-stack-action="start">Start all</button>
+            <button class="secondary" data-stack-action="restart">Restart all</button>
+            <button class="danger subtle" data-stack-action="stop">Pause all services</button>
+            <button id="refresh-status" class="primary">Refresh</button>
+          </div>
+        </div>
+        <div class="service-head">
+          <span>Service</span><span>Status</span><span>Usage</span><span>Actions</span>
+        </div>
+        <div id="services" class="service-list">
+          <div><span>PostgreSQL</span><em>Waiting for Docker</em><small>-</small></div>
+          <div><span>Synapse</span><em>Waiting for Docker</em><small>-</small></div>
+          <div><span>nginx gateway</span><em>Waiting for Docker</em><small>-</small></div>
+        </div>
+        <p class="notice"><b>Messaging policy:</b> text only, media and federation disabled, 48-hour retention, LAN TCP 80, and host-only administration. Stopping PostgreSQL interrupts Synapse; use whole-stack controls unless diagnosing a specific service.</p>
+      </section>
+
+      <section id="view-users" class="view">
+        <div class="section-head">
+          <div>
+            <p class="eyebrow">DIRECTORY</p>
+            <h2>Local Matrix accounts</h2>
+          </div>
+          <button id="open-create-user" class="primary">Create user</button>
+        </div>
+        <div class="toolbar">
+          <input id="user-search" type="search" placeholder="Search username or display name">
+          <button id="refresh-users" class="secondary">Refresh</button>
+        </div>
+        <p class="scope-note">Activity is based on Synapse last-seen timestamps and may lag by several minutes. Presence traffic remains disabled, so Axon does not claim exact online/offline status.</p>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Account</th><th>Role</th><th>State</th><th>Activity</th><th>Last seen</th><th></th></tr></thead>
+            <tbody id="user-rows"><tr><td colspan="6" class="empty">Loading accounts...</td></tr></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section id="view-rooms" class="view">
+        <div class="section-head">
+          <div>
+            <p class="eyebrow">ROOM DIRECTORY</p>
+            <h2>Rooms and membership</h2>
+          </div>
+          <button id="open-create-room" class="primary">Create room</button>
+        </div>
+        <div class="toolbar">
+          <input id="room-search" type="search" placeholder="Search name, alias, or room ID">
+          <button id="refresh-rooms" class="secondary">Refresh</button>
+        </div>
+        <p class="scope-note">Axon-created rooms are private, encrypted, and non-federated. Select a room to inspect members or perform administrative actions.</p>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Room</th><th>Members</th><th>Protection</th><th>Join rule</th><th>Creator</th><th></th></tr></thead>
+            <tbody id="room-rows"><tr><td colspan="6" class="empty">Loading rooms...</td></tr></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section id="view-batch" class="view">
+        <div class="section-head">
+          <div><p class="eyebrow">PROVISIONING</p><h2>Issue a batch</h2></div>
+        </div>
+        <div class="two-column">
+          <form id="batch-form" class="working-form">
+            <div class="form-row">
+              <label>Username prefix<input name="prefix" value="user" pattern="[a-z0-9._=-]+" required></label>
+              <label>Starting number<input name="start" type="number" min="0" value="1" required></label>
+            </div>
+            <div class="form-row">
+              <label>Number of users<input name="count" type="number" min="1" max="200" value="10" required></label>
+              <label>Number padding<input name="padding" type="number" min="0" max="8" value="3" required></label>
+            </div>
+            <label>Stock password<input name="password" type="text" minlength="10" autocomplete="new-password" required></label>
+            <label class="check"><input name="admin" type="checkbox"> Issue as server administrators</label>
+            <p class="form-note">Existing usernames are never overwritten. Stock Element permits users to change passwords but does not enforce a first-login change.</p>
+            <button class="primary" type="submit">Create batch</button>
+          </form>
+          <div class="preview">
+            <p class="eyebrow">PREVIEW</p>
+            <pre id="batch-preview">user001
+user002
+user003</pre>
+          </div>
+        </div>
+        <div id="batch-result" class="result-list"></div>
+        <button id="download-batch" class="secondary" hidden>Download issued-account CSV</button>
+      </section>
+
+      <section id="view-logs" class="view">
+        <div class="section-head">
+          <div><p class="eyebrow">DIAGNOSTICS</p><h2>Recent service logs</h2></div>
+          <button id="refresh-logs" class="primary">Refresh logs</button>
+        </div>
+        <pre id="logs" class="logs">Select Refresh logs to load the latest bounded output.</pre>
+      </section>
+    </main>
+  </div>
+
+  <div id="drawer-backdrop" class="drawer-backdrop" hidden></div>
+
+  <aside id="user-drawer" class="drawer" aria-label="Account editor" hidden>
+    <button class="close-button" data-close-drawer aria-label="Close">×</button>
+    <p class="eyebrow">ACCOUNT</p>
+    <h2>Create user</h2>
+    <form id="user-form" class="working-form">
+      <label>Username<input name="username" pattern="[a-z0-9._=-]+" required></label>
+      <label>Display name<input name="displayName"></label>
+      <label>Password<input name="password" type="text" minlength="10" autocomplete="new-password" required></label>
+      <label class="check"><input name="admin" type="checkbox"> Server administrator</label>
+      <p class="form-note">Administrator access includes the Synapse Admin API.</p>
+      <p id="user-error" class="form-error" role="alert"></p>
+      <button class="primary" type="submit">Create account</button>
+    </form>
+  </aside>
+
+  <aside id="room-create-drawer" class="drawer" aria-label="Create room" hidden>
+    <button class="close-button" data-close-drawer aria-label="Close">×</button>
+    <p class="eyebrow">NEW ROOM</p>
+    <h2>Create encrypted room</h2>
+    <form id="room-form" class="working-form">
+      <label>Room name<input name="name" maxlength="128" required></label>
+      <label>Topic<input name="topic" maxlength="1024"></label>
+      <label>Invite local users
+        <input name="invite" placeholder="user1, user2">
+      </label>
+      <p class="form-note">Enter usernames or full Axon IDs separated by commas. The room is always private, E2EE-enabled, and non-federated.</p>
+      <p id="room-error" class="form-error" role="alert"></p>
+      <button class="primary" type="submit">Create room</button>
+    </form>
+  </aside>
+
+  <aside id="room-drawer" class="drawer room-drawer" aria-label="Room inspector" hidden>
+    <button class="close-button" data-close-drawer aria-label="Close">×</button>
+    <p class="eyebrow">ROOM INSPECTOR</p>
+    <h2 id="room-drawer-name">Room</h2>
+    <code id="room-drawer-id" class="room-id"></code>
+    <dl id="room-facts" class="facts"></dl>
+    <div class="drawer-section">
+      <div class="section-head compact">
+        <div><p class="eyebrow">MEMBERSHIP</p><h3>Room members</h3></div>
+        <button id="refresh-members" class="secondary">Refresh</button>
+      </div>
+      <form id="room-member-form" class="inline-form">
+        <input name="userId" placeholder="user3 or @user3:axon.home.arpa" required>
+        <button class="primary" type="submit">Add user</button>
+      </form>
+      <p class="form-note">Take room control: for rooms created by another user, Axon visibly joins the current administrator and grants room-level control before adding or removing members.</p>
+      <div id="room-members" class="member-list"><div class="empty">Loading members...</div></div>
+    </div>
+    <div class="danger-zone">
+      <p class="eyebrow">DESTRUCTIVE</p>
+      <h3>Delete room</h3>
+      <p>Permanently removes local users, blocks rejoining, and asynchronously purges the room from Synapse.</p>
+      <button id="delete-room" class="danger">Delete and purge room</button>
+    </div>
+  </aside>
+
+  <div id="toast" class="toast" hidden></div>
+  <script src="/app.js?v=5"></script>
+</body>
+</html>

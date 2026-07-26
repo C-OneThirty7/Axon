@@ -1,0 +1,74 @@
+name: Axon CI
+
+on:
+  push:
+    branches: ["**"]
+    tags-ignore: ["v*"]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  dotnet:
+    name: .NET tests and ${{ matrix.rid }} publish
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        rid: [linux-x64, linux-arm64, win-x64]
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+      - uses: actions/setup-dotnet@26b0ec14cb23fa6904739307f278c14f94c95bf1 # v5
+        with:
+          global-json-file: global.json
+      - name: Restore
+        run: dotnet restore Axon.slnx
+      - name: Test
+        run: dotnet test Axon.slnx --configuration Release --no-restore
+      - name: Publish
+        run: >-
+          dotnet publish src/Axon.Control/Axon.Control.csproj
+          --configuration Release
+          --runtime ${{ matrix.rid }}
+          --self-contained true
+          --output artifacts/${{ matrix.rid }}
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: axon-control-${{ matrix.rid }}
+          path: artifacts/${{ matrix.rid }}
+          if-no-files-found: error
+
+  linux-contracts:
+    name: Linux and Compose contracts
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+      - name: Install static analyzers
+        run: sudo apt-get update && sudo apt-get install -y shellcheck
+      - name: Linux contracts
+        run: ./installer/linux/test-contracts.sh
+      - name: Compose validation
+        env:
+          AXON_BIND_IP: 10.77.77.42
+          AXON_DATA_ROOT: /tmp/axon-ci
+          SYNAPSE_IMAGE: matrixdotorg/synapse@sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+          POSTGRES_IMAGE: postgres@sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+          NGINX_IMAGE: nginx@sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
+          POSTGRES_PASSWORD: ci-not-a-production-secret
+        run: |
+          mkdir -p /tmp/axon-ci/runtime/nginx /tmp/axon-ci/runtime/synapse
+          cp deploy/nginx/default.conf.template /tmp/axon-ci/runtime/nginx/default.conf
+          cp deploy/synapse/homeserver.yaml.template /tmp/axon-ci/runtime/synapse/homeserver.yaml
+          docker compose -f deploy/compose.yaml config --quiet
+
+  repository-hygiene:
+    name: Repository hygiene
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+      - name: Reject secrets and generated release payloads
+        run: |
+          test -z "$(git ls-files '*.zip' '*.tar' '*.tar.gz' '*.pcap' '*.pcapng' '.env')"
+          ! git grep -En '^[[:space:]]*(POSTGRES[_]PASSWORD|REGISTRATION[_]SHARED[_]SECRET|MACAROON[_]SECRET[_]KEY)=.+' -- ':!*.template'

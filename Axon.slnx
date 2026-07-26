@@ -1,0 +1,8 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/Axon.Control/Axon.Control.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/Axon.Control.Tests/Axon.Control.Tests.csproj" />
+  </Folder>
+</Solution>

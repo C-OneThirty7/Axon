@@ -1,0 +1,148 @@
+#!/usr/bin/env bash
+set -Eeuo pipefail
+
+readonly APP_ROOT="/opt/axon"
+readonly CONFIG_ROOT="/etc/axon"
+readonly STATE_ROOT="/var/lib/axon"
+readonly COMPOSE_FILE="$APP_ROOT/deploy/compose.yaml"
+readonly ENV_FILE="$CONFIG_ROOT/.env"
+
+usage() {
+    cat <<'EOF'
+Usage: sudo axon COMMAND
+
+Commands:
+  start          Start Docker, Axon services, and the control panel
+  stop           Stop Matrix services; keep the control panel available
+  stop-all       Stop Matrix services and the control panel
+  restart        Restart the Matrix stack and keep the control panel running
+  status         Show systemd and container status
+  logs           Show recent Axon service and container logs
+  test           Test configuration, health, and loopback-only control access
+  firewall       Reapply the approved-client Docker firewall policy
+  create-admin   Run Synapse's interactive administrator creation command
+  config-backup  Export configuration only; no Matrix database or event data
+  uninstall      Start the safe Axon uninstaller
+  version        Print the installed Axon version
+EOF
+}
+
+require_root() {
+    if [[ "${EUID}" -ne 0 ]]; then
+        echo "Run this command with sudo." >&2
+        exit 1
+    fi
+}
+
+assert_installed() {
+    [[ -r "$ENV_FILE" && -r "$COMPOSE_FILE" ]] || {
+        echo "Axon is not completely installed." >&2
+        exit 1
+    }
+}
+
+compose() {
+    docker compose \
+        --project-name axon \
+        --env-file "$ENV_FILE" \
+        --file "$COMPOSE_FILE" \
+        "$@"
+}
+
+command="${1:-}"
+case "$command" in
+    start)
+        require_root
+        assert_installed
+        systemctl start docker.service
+        systemctl start axon-stack.service axon-control.service
+        echo "Axon is started. Control: http://127.0.0.1:8780"
+        ;;
+    stop)
+        require_root
+        assert_installed
+        systemctl stop axon-stack.service
+        systemctl start axon-control.service
+        echo "Matrix services are stopped; Axon Control remains available."
+        ;;
+    stop-all)
+        require_root
+        assert_installed
+        systemctl stop axon-stack.service axon-control.service
+        echo "Axon services and Axon Control are stopped."
+        ;;
+    restart)
+        require_root
+        assert_installed
+        systemctl start docker.service axon-control.service
+        systemctl restart axon-stack.service
+        echo "Axon restarted."
+        ;;
+    status)
+        require_root
+        assert_installed
+        systemctl --no-pager --full status axon-stack.service axon-control.service || true
+        compose ps
+        ;;
+    logs)
+        require_root
+        assert_installed
+        journalctl --no-pager -u axon-stack.service -u axon-control.service -n 120
+        compose logs --no-color --tail 200 gateway synapse postgres
+        ;;
+    test)
+        require_root
+        assert_installed
+        compose config --quiet
+        compose ps
+        curl --fail --silent --show-error http://127.0.0.1:8008/health >/dev/null
+        curl --fail --silent --show-error http://127.0.0.1:8780/api/session >/dev/null
+        if ss -lntH 'sport = :8780' | awk '{print $4}' | grep -Evq '^(127\.0\.0\.1|\[::1\]):8780$'; then
+            echo "Axon Control is listening beyond loopback." >&2
+            exit 1
+        fi
+        echo "Axon configuration and local health tests passed."
+        ;;
+    firewall)
+        require_root
+        assert_installed
+        "$APP_ROOT/installer/linux/configure-firewall.sh"
+        ;;
+    create-admin)
+        require_root
+        assert_installed
+        docker exec -it axon-synapse-1 \
+            register_new_matrix_user \
+            --admin \
+            --config /config/homeserver.yaml \
+            http://127.0.0.1:8008
+        ;;
+    config-backup)
+        require_root
+        assert_installed
+        umask 077
+        backup_path="${2:-$STATE_ROOT/axon-config-$(date -u +%Y%m%dT%H%M%SZ).tar.gz}"
+        tar --create --gzip --file "$backup_path" \
+            --directory / \
+            etc/axon \
+            opt/axon/VERSION \
+            opt/axon/manifests
+        echo "Configuration-only backup: $backup_path"
+        echo "Matrix database volumes and event data were not included."
+        ;;
+    uninstall)
+        require_root
+        exec "$APP_ROOT/installer/linux/uninstall.sh" "${@:2}"
+        ;;
+    version)
+        cat "$APP_ROOT/VERSION"
+        ;;
+    help|-h|--help|"")
+        usage
+        ;;
+    *)
+        echo "Unknown Axon command: $command" >&2
+        usage >&2
+        exit 2
+        ;;
+esac

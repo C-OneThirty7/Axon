@@ -1,0 +1,34 @@
+[Unit]
+Description=Axon host-only administration panel
+Documentation=file:/opt/axon/docs/operations/LINUX_OPERATIONS.md
+Wants=network-online.target
+After=network-online.target docker.service
+Requires=docker.service
+
+[Service]
+Type=simple
+User=axon
+Group=axon
+SupplementaryGroups=docker
+WorkingDirectory=/opt/axon/bin
+Environment=HOME=/var/lib/axon
+Environment=DOTNET_CLI_HOME=/var/lib/axon
+ExecStart=/opt/axon/bin/Axon.Control serve --bundle-root /opt/axon --data-root /etc/axon
+Restart=on-failure
+RestartSec=5
+NoNewPrivileges=yes
+PrivateTmp=yes
+ProtectSystem=strict
+ProtectHome=yes
+ProtectKernelTunables=yes
+ProtectKernelModules=yes
+ProtectControlGroups=yes
+RestrictSUIDSGID=yes
+LockPersonality=yes
+CapabilityBoundingSet=
+RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6
+ReadOnlyPaths=/opt/axon /etc/axon
+ReadWritePaths=/var/lib/axon
+
+[Install]
+WantedBy=multi-user.target
