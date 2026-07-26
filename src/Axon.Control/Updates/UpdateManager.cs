@@ -34,16 +34,18 @@ public sealed class UpdateManager
         GithubReleaseClient releases,
         string bundleRoot,
         string dataRoot,
-        Func<UpdatePlatform>? platformDetector = null)
+        Func<UpdatePlatform>? platformDetector = null,
+        string? updateRoot = null)
     {
         this.httpClient = httpClient;
         this.releases = releases;
         this.bundleRoot = Path.GetFullPath(bundleRoot);
         this.dataRoot = Path.GetFullPath(dataRoot);
         this.platformDetector = platformDetector ?? UpdatePlatform.Detect;
-        updateRoot = OperatingSystem.IsLinux()
-            ? "/var/lib/axon/updates"
-            : Path.Combine(this.dataRoot, "updates");
+        this.updateRoot = Path.GetFullPath(updateRoot ?? (
+            OperatingSystem.IsLinux()
+                ? "/var/lib/axon/updates"
+                : Path.Combine(this.dataRoot, "updates")));
     }
 
     public static HttpClient CreateHttpClient()

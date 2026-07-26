@@ -87,7 +87,8 @@ public sealed class UpdateManagerTests
                     "Windows 11 x64",
                     "-offline-win-x64.zip",
                     true,
-                    "Windows release channel."));
+                    "Windows release channel."),
+                root);
 
             manager.StartDownload(includePrereleases: false);
             UpdateOperationStatus status;
