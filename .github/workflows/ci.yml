@@ -19,7 +19,7 @@ jobs:
       matrix:
         rid: [linux-x64, linux-arm64, win-x64]
     steps:
-      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: actions/setup-dotnet@26b0ec14cb23fa6904739307f278c14f94c95bf1 # v5
         with:
           global-json-file: global.json
@@ -44,7 +44,7 @@ jobs:
     name: Linux and Compose contracts
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - name: Install static analyzers
         run: sudo apt-get update && sudo apt-get install -y shellcheck
       - name: Linux contracts
@@ -67,7 +67,7 @@ jobs:
     name: Repository hygiene
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - name: Reject secrets and generated release payloads
         run: |
           test -z "$(git ls-files '*.zip' '*.tar' '*.tar.gz' '*.pcap' '*.pcapng' '.env')"
