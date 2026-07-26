@@ -42,6 +42,9 @@ public sealed class OfflineBundleContractTests
         Assert.Contains("Axon-v$Version-offline-win-x64.zip", script);
         Assert.Contains("Install Axon.cmd", script);
         Assert.Contains("README_FIRST.txt", script);
+        Assert.Contains("INSTALL_WINDOWS.md", script);
+        Assert.Contains("THIRD_PARTY_NOTICES.md", script);
+        Assert.Contains("\"LICENSE\"", script);
         Assert.DoesNotContain("Axon Operations.cmd", script);
         Assert.DoesNotContain("Start Axon.cmd", script);
         Assert.DoesNotContain("Remove-Item $BundleRoot", script, StringComparison.OrdinalIgnoreCase);

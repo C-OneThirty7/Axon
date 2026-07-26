@@ -78,7 +78,7 @@ $BundleRoot = Join-Path ([IO.Path]::GetFullPath($OutputRoot)) "Axon-v$Version-of
 $ZipPath = Join-Path ([IO.Path]::GetFullPath($OutputRoot)) "Axon-v$Version-offline-win-x64.zip"
 if (Test-Path -LiteralPath $BundleRoot) { throw "Output already exists: $BundleRoot" }
 New-Item -ItemType Directory -Force -Path $BundleRoot | Out-Null
-foreach ($directory in @("bin", "deploy", "docs", "docs\security", "docs\user-guides", "images", "installers", "manifests", "scripts")) {
+foreach ($directory in @("bin", "deploy", "docs", "docs\installation", "docs\security", "docs\user-guides", "images", "installers", "manifests", "scripts")) {
     New-Item -ItemType Directory -Force -Path (Join-Path $BundleRoot $directory) | Out-Null
 }
 
@@ -93,7 +93,12 @@ Copy-Item -LiteralPath (Join-Path $SourceRoot "scripts\Test-Axon.ps1") -Destinat
 Copy-Item -LiteralPath (Join-Path $SourceRoot "scripts\Uninstall-Axon.ps1") -Destination (Join-Path $BundleRoot "scripts\Uninstall-Axon.ps1")
 Copy-Item -LiteralPath (Join-Path $SourceRoot "Install Axon.cmd") -Destination (Join-Path $BundleRoot "Install Axon.cmd")
 Copy-Item -LiteralPath (Join-Path $SourceRoot "docs\operator") -Destination (Join-Path $BundleRoot "docs\operator") -Recurse
+Copy-Item -LiteralPath (Join-Path $SourceRoot "docs\README.md") -Destination (Join-Path $BundleRoot "docs\README.md")
+Copy-Item -LiteralPath (Join-Path $SourceRoot "docs\installation\INSTALL_WINDOWS.md") -Destination (Join-Path $BundleRoot "docs\installation\INSTALL_WINDOWS.md")
 Copy-Item -LiteralPath (Join-Path $SourceRoot "docs\security\Axon_v0.1.0_Security_Audit.md") -Destination (Join-Path $BundleRoot "docs\security")
+foreach ($releaseFile in @("LICENSE", "THIRD_PARTY_NOTICES.md", "SECURITY.md", "VERSION")) {
+    Copy-Item -LiteralPath (Join-Path $SourceRoot $releaseFile) -Destination (Join-Path $BundleRoot $releaseFile)
+}
 $PdfGuideSource = Join-Path $SourceRoot "output\pdf"
 if (-not (Test-Path -LiteralPath $PdfGuideSource -PathType Container)) {
     throw "PDF user guides are missing: $PdfGuideSource"
