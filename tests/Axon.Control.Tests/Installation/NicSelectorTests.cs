@@ -30,7 +30,7 @@ public sealed class NicSelectorTests
         {
             MacAddress = "A0-CE-C8-F3-53-6A",
             LinkSpeedBitsPerSecond = 2_500_000_000,
-            Addresses = [new NicAddress("10.77.77.42", 24), new NicAddress("169.254.1.2", 16)]
+            Addresses = [new NicAddress("10.20.30.2", 24), new NicAddress("169.254.1.2", 16)]
         };
 
         var display = NicSelector.Describe(candidate);
@@ -39,7 +39,7 @@ public sealed class NicSelectorTests
         Assert.Equal(17, display.InterfaceIndex);
         Assert.Equal("A0-CE-C8-F3-53-6A", display.MacAddress);
         Assert.Equal("2.5 Gbps", display.LinkSpeed);
-        Assert.Equal(["10.77.77.42/24", "169.254.1.2/16"], display.Addresses);
+        Assert.Equal(["10.20.30.2/24", "169.254.1.2/16"], display.Addresses);
     }
 
     [Fact]
@@ -53,7 +53,7 @@ public sealed class NicSelectorTests
             },
             Candidate("Axon Ethernet", 7, NicKind.Ethernet) with
             {
-                Addresses = [new NicAddress("10.77.77.42", 24)]
+                Addresses = [new NicAddress("10.20.30.2", 24)]
             }
         };
 
@@ -68,13 +68,13 @@ public sealed class NicSelectorTests
     {
         var original = Candidate("Axon Ethernet", 7, NicKind.Ethernet) with
         {
-            Addresses = [new NicAddress("10.77.77.42", 24)]
+            Addresses = [new NicAddress("10.20.30.2", 24)]
         };
 
         var selection = NicSelector.Choose([original], 7);
 
         Assert.Same(original, selection.Candidate);
-        Assert.Equal("10.77.77.42", selection.ExistingAxonAddress);
+        Assert.Equal("10.20.30.2", selection.ExistingAxonAddress);
         Assert.False(selection.RequiresAddressChange);
         Assert.False(selection.AppliedChanges);
     }

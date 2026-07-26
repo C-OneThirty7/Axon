@@ -14,12 +14,12 @@ On a Docker-capable build host:
 
 ```bash
 ./packaging/linux/build-release.sh \
-  --version 0.2.0 \
+  --version 0.3.0 \
   --distro ubuntu-24.04 \
   --arch amd64
 
 ./packaging/linux/build-release.sh \
-  --version 0.2.0 \
+  --version 0.3.0 \
   --distro debian-13 \
   --arch amd64
 ```
@@ -28,7 +28,7 @@ ARM64:
 
 ```bash
 ./packaging/linux/build-release.sh \
-  --version 0.2.0 \
+  --version 0.3.0 \
   --distro ubuntu-24.04 \
   --arch arm64
 ```
@@ -54,6 +54,23 @@ Before any public push:
 Generated archives belong in GitHub Releases or another artifact store, not in
 normal Git history.
 
+## Sign release assets
+
+Axon Control enables click-through installation only when a release contains
+the archive, its `.sha256` file, and a valid `.sig` created with the protected
+Axon release key. The private key is never stored in this repository.
+
+```bash
+export AXON_RELEASE_SIGNING_KEY=/protected/axon-release-private-key.pem
+./scripts/Sign-ReleaseAsset.sh dist/Axon-v0.3.0-offline-win-x64.zip
+./scripts/Sign-ReleaseAsset.sh \
+  dist/Axon-v0.3.0-offline-ubuntu-24.04-amd64.tar.gz
+```
+
+Upload each archive, checksum, and signature together. The public verification
+key is pinned in Axon Control and published at
+`manifests/axon-release-public-key.pem`.
+
 ## Public asset organization
 
 Use exact, platform-specific filenames:
@@ -65,8 +82,8 @@ Axon-v<VERSION>-offline-debian-13-amd64.tar.gz
 Axon-v<VERSION>-offline-ubuntu-24.04-arm64.tar.gz
 ```
 
-Attach a matching `.sha256` file for every archive. Release notes must identify
-the host operating system, architecture, validation status, minimum
+Attach matching `.sha256` and `.sig` files for every archive. Release notes must
+identify the host operating system, architecture, validation status, minimum
 requirements, and the correct installation guide.
 
 Do not advertise a platform in the README download table until its exact asset
@@ -77,6 +94,8 @@ The initial public release set is intentionally split:
 
 - `v0.1.0`: tested Windows 11 x64 offline bundle;
 - `v0.2.0`: validated Ubuntu Server 24.04 AMD64 offline bundle.
+- `v0.3.0`: unified Windows 11 x64 and Ubuntu Server 24.04 AMD64
+  packages with Axon Control release checking.
 
 Users should select the release asset from the platform table in the root
 README, not GitHub's automatic source archives.

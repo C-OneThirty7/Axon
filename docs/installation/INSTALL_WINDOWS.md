@@ -1,4 +1,4 @@
-# Install Axon v0.1.0 on Windows 11
+# Install Axon v0.3.0 on Windows 11
 
 ## Requirements
 
@@ -14,7 +14,7 @@
 - Expanded, checksummed Axon offline bundle on a local NTFS drive.
 - A stable private IPv4 address reachable from the intended client networks.
 
-The Razer 18 with 32 GiB RAM and SSD/NVMe storage is comfortably suitable.
+A host with 32 GiB RAM and SSD/NVMe storage provides comfortable headroom.
 Memory and disk shortfalls produce visible capacity warnings but do not stop a
 normal installation. They may reduce the user count or soak duration the host
 can support. `-StrictPreflight` is available only when an organization
@@ -54,7 +54,7 @@ For routed client networks, provide every permitted source CIDR:
 
 ```powershell
 powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\scripts\Install-Axon.ps1 `
-  -AllowedRemoteAddress "10.77.0.0/24","10.88.0.0/24"
+  -AllowedRemoteAddress "10.30.0.0/24","10.40.0.0/24"
 ```
 
 The installer:
@@ -91,7 +91,7 @@ If it already reports running, choose `End` and then `Run`.
 If Synapse was stopped before sign-out, GUI login cannot authenticate until the
 containers are running. Start the complete `axon` group from Docker Desktop,
 then refresh Axon Control. This host recovery path was proven during the
-v0.1.0 Windows restart test.
+v0.3.0 Windows restart test.
 
 ## Axon Control GUI
 

@@ -1,0 +1,152 @@
+#!/usr/bin/env bash
+set -Eeuo pipefail
+
+readonly REQUEST_PATH="${1:-}"
+readonly UPDATE_ROOT="/var/lib/axon/updates"
+readonly CONFIG_ROOT="/etc/axon"
+readonly APP_ROOT="/opt/axon"
+readonly STATUS_PATH="$UPDATE_ROOT/status.json"
+
+version=""
+archive_path=""
+signature_path=""
+expected_sha=""
+backup_root=""
+
+write_status() {
+    local state="$1" message="$2" temporary="$STATUS_PATH.tmp"
+    local escaped_message="${message//\\/\\\\}"
+    escaped_message="${escaped_message//\"/\\\"}"
+    escaped_message="${escaped_message//$'\n'/\\n}"
+    printf '{"state":"%s","message":"%s","version":"%s","updatedAt":"%s"}\n' \
+        "$state" "$escaped_message" "$version" "$(date --utc --iso-8601=seconds)" > "$temporary"
+    chown axon:axon "$temporary"
+    chmod 0640 "$temporary"
+    mv -f -- "$temporary" "$STATUS_PATH"
+}
+
+fail_update() {
+    local message="$1"
+    write_status failed "$message"
+    printf '[Axon update] %s\n' "$message" >&2
+    exit 1
+}
+
+restore_previous() {
+    if [[ -n "$backup_root" && -d "$backup_root/app" ]]; then
+        rm -rf -- "$APP_ROOT"
+        cp -a -- "$backup_root/app" "$APP_ROOT"
+    fi
+    if [[ -n "$backup_root" && -f "$backup_root/.env" ]]; then
+        cp -a -- "$backup_root/.env" "$CONFIG_ROOT/.env"
+    fi
+    systemctl daemon-reload || true
+    systemctl restart axon-stack.service axon-control.service || true
+}
+
+on_error() {
+    local exit_code=$?
+    trap - ERR
+    restore_previous
+    write_status failed "Axon ${version:-release} update failed. Review journalctl -u axon-update.service."
+    exit "$exit_code"
+}
+trap on_error ERR
+
+[[ "$EUID" -eq 0 ]] || fail_update "The Axon update helper must run as root."
+[[ "$REQUEST_PATH" == "$UPDATE_ROOT/install-request.json" ]] ||
+    fail_update "Update request path is invalid."
+[[ -f "$REQUEST_PATH" && ! -L "$REQUEST_PATH" ]] ||
+    fail_update "Update request is missing or unsafe."
+
+version="$(sed -n 's/^AXON_UPDATE_VERSION=//p' "$REQUEST_PATH")"
+archive_path="$(sed -n 's/^AXON_UPDATE_ARCHIVE=//p' "$REQUEST_PATH")"
+signature_path="$(sed -n 's/^AXON_UPDATE_SIGNATURE=//p' "$REQUEST_PATH")"
+expected_sha="$(sed -n 's/^AXON_UPDATE_SHA256=//p' "$REQUEST_PATH")"
+rm -f -- "$REQUEST_PATH"
+[[ -n "$version" && -n "$archive_path" && -n "$signature_path" && -n "$expected_sha" ]] ||
+    fail_update "Update request is incomplete."
+[[ "$version" != *$'\n'* && "$archive_path" != *$'\n'* &&
+   "$signature_path" != *$'\n'* && "$expected_sha" != *$'\n'* ]] ||
+    fail_update "Update request contains invalid line breaks."
+expected_sha="${expected_sha,,}"
+
+[[ "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] || fail_update "Update version is invalid."
+[[ "$expected_sha" =~ ^[a-f0-9]{64}$ ]] || fail_update "Update checksum is invalid."
+
+# shellcheck disable=SC1091
+source /etc/os-release
+case "$(uname -m)" in
+    x86_64) axon_arch="amd64" ;;
+    aarch64|arm64) axon_arch="arm64" ;;
+    *) fail_update "Unsupported update architecture." ;;
+esac
+case "${ID,,}-${VERSION_ID}" in
+    ubuntu-24.04) platform="ubuntu-24.04-$axon_arch" ;;
+    ubuntu-26.04) platform="ubuntu-26.04-$axon_arch" ;;
+    debian-13) platform="debian-13-$axon_arch" ;;
+    *) fail_update "No click-to-install release channel exists for this host." ;;
+esac
+
+expected_name="Axon-v${version}-offline-${platform}.tar.gz"
+expected_directory="$UPDATE_ROOT/v$version"
+resolved_archive="$(realpath -e -- "$archive_path")"
+resolved_signature="$(realpath -e -- "$signature_path")"
+[[ "$resolved_archive" == "$expected_directory/$expected_name" && ! -L "$archive_path" ]] ||
+    fail_update "Update archive is outside Axon's protected version directory."
+[[ "$resolved_signature" == "$expected_directory/$expected_name.sig" && ! -L "$signature_path" ]] ||
+    fail_update "Update signature is outside Axon's protected version directory."
+actual_sha="$(sha256sum -- "$resolved_archive" | awk '{print $1}')"
+[[ "$actual_sha" == "$expected_sha" ]] || fail_update "Update archive failed its final SHA-256 verification."
+/opt/axon/bin/Axon.Control verify-update "$resolved_archive" "$resolved_signature" ||
+    fail_update "Update archive failed Axon's release-signature verification."
+
+unsafe_entry="$(
+    tar -tzf "$resolved_archive" |
+        awk 'BEGIN { bad="" } /(^\\/|(^|\\/)\\.\\.($|\\/))/ { bad=$0; exit } END { print bad }'
+)"
+[[ -z "$unsafe_entry" ]] || fail_update "Update archive contains an unsafe path."
+if tar -tvzf "$resolved_archive" | awk 'substr($1,1,1) != "-" && substr($1,1,1) != "d" { exit 1 }'; then
+    :
+else
+    fail_update "Update archive contains unsupported link or device entries."
+fi
+
+extract_root="$UPDATE_ROOT/extracted-v$version"
+rm -rf -- "$extract_root"
+install -d -m 0750 -o root -g axon "$extract_root"
+write_status installing "Extracting and validating Axon $version."
+tar --extract --gzip --file "$resolved_archive" --directory "$extract_root" \
+    --no-same-owner --no-same-permissions
+bundle_root="$extract_root/Axon-v${version}-offline-${platform}"
+[[ -x "$bundle_root/installer/linux/install.sh" && -f "$bundle_root/manifests/SHA256SUMS" ]] ||
+    fail_update "Extracted Axon bundle is incomplete."
+(
+    cd "$bundle_root"
+    sha256sum --check manifests/SHA256SUMS
+)
+
+[[ -r "$CONFIG_ROOT/install.conf" && -r "$CONFIG_ROOT/.env" ]] ||
+    fail_update "Existing Axon installation state is incomplete."
+# shellcheck disable=SC1091
+source "$CONFIG_ROOT/install.conf"
+backup_root="$UPDATE_ROOT/backup-v$version"
+rm -rf -- "$backup_root"
+install -d -m 0700 "$backup_root"
+cp -a -- "$APP_ROOT" "$backup_root/app"
+cp -a -- "$CONFIG_ROOT/.env" "$backup_root/.env"
+
+systemctl stop axon-control.service
+write_status installing "Applying Axon $version and restarting services."
+"$bundle_root/installer/linux/install.sh" \
+    --offline \
+    --non-interactive \
+    --skip-initial-user \
+    --upgrade \
+    --bind-ip "$AXON_BIND_IP" \
+    --interface "$AXON_INTERFACE" \
+    --allowed-cidr "$AXON_ALLOWED_CIDRS"
+
+trap - ERR
+write_status succeeded "Axon $version installed successfully."
+printf '[Axon update] Axon %s installed successfully.\n' "$version"

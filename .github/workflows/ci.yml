@@ -51,7 +51,7 @@ jobs:
         run: ./installer/linux/test-contracts.sh
       - name: Compose validation
         env:
-          AXON_BIND_IP: 10.77.77.42
+          AXON_BIND_IP: 10.20.30.2
           AXON_DATA_ROOT: /tmp/axon-ci
           SYNAPSE_IMAGE: matrixdotorg/synapse@sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
           POSTGRES_IMAGE: postgres@sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb

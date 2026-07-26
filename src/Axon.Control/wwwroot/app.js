@@ -4,6 +4,7 @@ const state = {
   users: [],
   rooms: [],
   selectedRoom: null,
+  update: null,
   lastBatch: [],
   searchTimer: null
 };
@@ -57,7 +58,8 @@ function selectView(name) {
     users: "User directory",
     rooms: "Room control",
     batch: "Batch provisioning",
-    logs: "Service logs"
+    logs: "Service logs",
+    updates: "Release updates"
   };
   $$(".nav-item").forEach((item) => item.classList.toggle("active", item.dataset.view === name));
   $$(".view").forEach((view) => view.classList.toggle("active", view.id === `view-${name}`));
@@ -252,6 +254,168 @@ async function loadLogs() {
   catch (error) { $("#logs").textContent = error.message; }
 }
 
+function trustedGithubUrl(value) {
+  try {
+    const url = new URL(value);
+    return url.protocol === "https:" && url.hostname === "github.com" ? url.href : null;
+  } catch {
+    return null;
+  }
+}
+
+function formatBytes(value) {
+  const bytes = Number(value) || 0;
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KiB`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MiB`;
+}
+
+async function checkForUpdates() {
+  const button = $("#check-updates");
+  const includePrereleases = $("#include-prereleases").checked;
+  button.disabled = true;
+  button.textContent = "Checking GitHub...";
+  $("#update-state").textContent = "Checking";
+  $("#update-state").className = "tag warning";
+  $("#update-message").textContent = "Contacting the public Axon release feed.";
+  $("#update-actions").hidden = true;
+  try {
+    const result = await api(`/api/update?includePrereleases=${includePrereleases}`);
+    state.update = result;
+    $("#update-current").textContent = `Axon v${result.currentVersion}`;
+    $("#update-platform").textContent = result.platform;
+    $("#update-latest").textContent = result.latestVersion ? `v${result.latestVersion}` : "-";
+    $("#update-channel").textContent = result.prerelease ? "Prerelease" : "Stable";
+    $("#update-published").textContent = result.publishedAt
+      ? new Date(result.publishedAt).toLocaleString()
+      : "-";
+    $("#update-message").textContent = result.message;
+    $("#update-state").textContent = !result.reachable
+      ? "Offline"
+      : result.updateAvailable
+        ? "Update available"
+        : "Current";
+    $("#update-state").className = `tag ${result.updateAvailable ? "admin" : result.reachable ? "encrypted" : "warning"}`;
+
+    const automated = result.updateAvailable && result.package && result.checksum && result.signature;
+    $("#update-download").hidden = !automated;
+    $("#update-download").textContent = automated
+      ? `Download and verify (${formatBytes(result.package.size)})`
+      : "Download and verify";
+    $("#update-install").hidden = true;
+    $("#update-progress").hidden = true;
+    const releaseLink = $("#update-release");
+    const releaseUrl = trustedGithubUrl(result.releaseUrl);
+    if (releaseUrl) {
+      releaseLink.href = releaseUrl;
+      releaseLink.hidden = false;
+    } else {
+      releaseLink.hidden = true;
+      releaseLink.removeAttribute("href");
+    }
+    $("#update-actions").hidden = !releaseUrl && !automated;
+    if (result.updateAvailable && !automated) {
+      $("#update-message").textContent =
+        "This release does not include the package, checksum, and Axon signature required for click-to-install updates.";
+    }
+  } catch (error) {
+    $("#update-state").textContent = "Unavailable";
+    $("#update-state").className = "tag warning";
+    $("#update-message").textContent = error.message;
+  } finally {
+    button.disabled = false;
+    button.textContent = "Check for updates";
+  }
+}
+
+function renderUpdateProgress(operation) {
+  const active = ["checking", "downloading", "downloaded", "installing"].includes(operation.state);
+  $("#update-progress").hidden = !active;
+  $("#update-progress-label").textContent = operation.message;
+  const percent = operation.totalBytes > 0
+    ? Math.min(100, Math.round((operation.bytesReceived / operation.totalBytes) * 100))
+    : 0;
+  $("#update-progress-value").textContent = operation.state === "downloaded" ? "Verified" : `${percent}%`;
+  $("#update-progress-bar").value = operation.state === "downloaded" ? 100 : percent;
+  $("#update-message").textContent = operation.message;
+  $("#update-state").textContent = {
+    checking: "Checking",
+    downloading: "Downloading",
+    downloaded: "Ready to install",
+    installing: "Installing",
+    failed: "Failed"
+  }[operation.state] || "Not checked";
+  $("#update-state").className =
+    `tag ${operation.state === "downloaded" ? "encrypted" : operation.state === "failed" ? "warning" : "admin"}`;
+  $("#update-download").hidden = operation.state !== "failed";
+  $("#update-install").hidden = operation.state !== "downloaded";
+}
+
+async function pollUpdateOperation() {
+  try {
+    const operation = await api("/api/update/status");
+    renderUpdateProgress(operation);
+    if (operation.state === "checking" || operation.state === "downloading") {
+      setTimeout(pollUpdateOperation, 750);
+    }
+  } catch (error) {
+    $("#update-message").textContent = error.message;
+  }
+}
+
+async function downloadUpdate() {
+  const includePrereleases = $("#include-prereleases").checked;
+  $("#update-download").disabled = true;
+  try {
+    const operation = await api(`/api/update/download?includePrereleases=${includePrereleases}`, {
+      method: "POST"
+    });
+    renderUpdateProgress(operation);
+    setTimeout(pollUpdateOperation, 500);
+  } catch (error) {
+    $("#update-message").textContent = error.message;
+  } finally {
+    $("#update-download").disabled = false;
+  }
+}
+
+async function waitForUpdatedControl(attempt = 0) {
+  if (attempt > 90) {
+    $("#update-message").textContent =
+      "The host updater is still working. Refresh this page after Axon Control restarts.";
+    return;
+  }
+  try {
+    const response = await fetch("/api/session", {
+      credentials: "same-origin",
+      cache: "no-store"
+    });
+    if (response.ok && attempt > 1) {
+      location.reload();
+      return;
+    }
+  } catch {
+    // A temporary connection failure is expected while Axon Control restarts.
+  }
+  setTimeout(() => waitForUpdatedControl(attempt + 1), 2000);
+}
+
+async function installUpdate() {
+  const version = state.update?.latestVersion || "the verified release";
+  if (!confirm(`Install Axon ${version} now? Messaging services and Axon Control will restart automatically.`)) return;
+  $("#update-install").disabled = true;
+  try {
+    const operation = await api("/api/update/install", { method: "POST" });
+    renderUpdateProgress(operation);
+    $("#update-message").textContent =
+      "The verified update is installing. This page will reconnect when Axon Control returns.";
+    setTimeout(() => waitForUpdatedControl(0), 4000);
+  } catch (error) {
+    $("#update-message").textContent = error.message;
+    $("#update-install").disabled = false;
+  }
+}
+
 function updateBatchPreview() {
   const form = new FormData($("#batch-form"));
   const prefix = form.get("prefix") || "user";
@@ -295,6 +459,9 @@ $("#refresh-users").addEventListener("click", loadUsers);
 $("#refresh-rooms").addEventListener("click", loadRooms);
 $("#refresh-members").addEventListener("click", loadRoomMembers);
 $("#refresh-logs").addEventListener("click", loadLogs);
+$("#check-updates").addEventListener("click", checkForUpdates);
+$("#update-download").addEventListener("click", downloadUpdate);
+$("#update-install").addEventListener("click", installUpdate);
 $("#user-search").addEventListener("input", () => {
   clearTimeout(state.searchTimer);
   state.searchTimer = setTimeout(loadUsers, 250);

@@ -33,6 +33,7 @@ public sealed class OfflineBundleContractTests
         Assert.Contains("axon.local", script);
         Assert.Contains("Axon.Common.psm1", script);
         Assert.Contains("Test-AxonBundle.ps1", script);
+        Assert.Contains("Invoke-AxonUpdate.ps1", script);
         Assert.Contains("output\\pdf", script);
         Assert.Contains("dotnet publish", script);
         Assert.Contains("win-x64", script);
@@ -48,5 +49,12 @@ public sealed class OfflineBundleContractTests
         Assert.DoesNotContain("Axon Operations.cmd", script);
         Assert.DoesNotContain("Start Axon.cmd", script);
         Assert.DoesNotContain("Remove-Item $BundleRoot", script, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("runtime\\synapse\\homeserver.yaml", script);
+        Assert.Contains("axon-release-public-key.pem", script);
+
+        var signer = DeployTestFiles.Read("scripts/Sign-ReleaseAsset.sh");
+        Assert.Contains("AXON_RELEASE_SIGNING_KEY", signer);
+        Assert.Contains("openssl dgst -sha256 -sign", signer);
+        Assert.Contains("openssl dgst -sha256 -verify", signer);
     }
 }

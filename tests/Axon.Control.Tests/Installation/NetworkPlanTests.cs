@@ -7,9 +7,9 @@ public sealed class NetworkPlanTests
     [Fact]
     public void Preserves_an_existing_matching_static_address()
     {
-        var candidate = Ethernet([new NicAddress("10.77.77.42", 24)]);
+        var candidate = Ethernet([new NicAddress("10.20.30.2", 24)]);
 
-        var plan = NetworkPlan.Create(candidate, "10.77.77.42", 24, operatorConfirmed: false);
+        var plan = NetworkPlan.Create(candidate, "10.20.30.2", 24, operatorConfirmed: false);
 
         Assert.False(plan.RequiresAddressChange);
         Assert.False(plan.RequiresOperatorConfirmation);
@@ -25,7 +25,7 @@ public sealed class NetworkPlanTests
         var addresses = new[] { new NicAddress("192.168.50.4", 24) };
         var candidate = Ethernet(addresses);
 
-        var plan = NetworkPlan.Create(candidate, "10.77.77.42", 24, operatorConfirmed: false);
+        var plan = NetworkPlan.Create(candidate, "10.20.30.2", 24, operatorConfirmed: false);
 
         Assert.True(plan.RequiresAddressChange);
         Assert.True(plan.RequiresOperatorConfirmation);
@@ -40,11 +40,11 @@ public sealed class NetworkPlanTests
         var candidate = Ethernet(
             [new NicAddress("192.168.50.4", 24), new NicAddress("169.254.4.5", 16)]);
 
-        var plan = NetworkPlan.Create(candidate, "10.77.77.42", 24, operatorConfirmed: true);
+        var plan = NetworkPlan.Create(candidate, "10.20.30.2", 24, operatorConfirmed: true);
 
         Assert.Equal(17, plan.InterfaceIndex);
         Assert.Equal("USB Ethernet", plan.InterfaceAlias);
-        Assert.Equal("10.77.77.42", plan.Address);
+        Assert.Equal("10.20.30.2", plan.Address);
         Assert.Equal(24, plan.PrefixLength);
         Assert.Equal(["192.168.50.4", "169.254.4.5"], plan.AddressesToRemove);
         Assert.Null(plan.Gateway);
@@ -57,7 +57,7 @@ public sealed class NetworkPlanTests
     {
         var candidate = Ethernet([]);
 
-        Assert.Throws<ArgumentException>(() => NetworkPlan.Create(candidate, "10.77.77.255", 24, true));
+        Assert.Throws<ArgumentException>(() => NetworkPlan.Create(candidate, "10.20.30.255", 24, true));
         Assert.Throws<ArgumentException>(() => NetworkPlan.Create(candidate, "8.8.8.8", 24, true));
     }
 

@@ -8,7 +8,7 @@ public sealed class FirewallPolicyTests
     [Fact]
     public void Creates_only_the_exact_Matrix_LAN_rule()
     {
-        var options = AxonOptions.Default with { BindIp = "10.77.77.42" };
+        var options = AxonOptions.Default with { BindIp = "10.20.30.2" };
 
         var policy = FirewallPolicy.Create(options, "USB Ethernet");
 
@@ -18,7 +18,7 @@ public sealed class FirewallPolicyTests
         Assert.Equal(FirewallDirection.Inbound, rule.Direction);
         Assert.Equal("TCP", rule.Protocol);
         Assert.Equal(80, rule.LocalPort);
-        Assert.Equal("10.77.77.42", rule.LocalAddress);
+        Assert.Equal("10.20.30.2", rule.LocalAddress);
         Assert.Equal("LocalSubnet", rule.RemoteAddress);
         Assert.Equal("USB Ethernet", rule.InterfaceAlias);
         Assert.Equal("Private", rule.Profile);

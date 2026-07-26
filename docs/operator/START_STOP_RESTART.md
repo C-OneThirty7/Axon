@@ -1,6 +1,6 @@
 # Axon start, stop, and restart procedures
 
-## Supported v0.1.0 cold start
+## Supported cold start
 
 1. Power on Windows and sign in with the Windows account that installed Axon.
 2. Start Docker Desktop and wait until its Linux engine reports running.
@@ -9,7 +9,7 @@
 4. Open the `Axon Control` Desktop shortcut at `http://127.0.0.1:8780`.
 
 The containers use `restart: unless-stopped`, so they normally return when the
-Docker engine starts. Axon v0.1.0 intentionally does not install experimental
+Docker engine starts. Axon intentionally does not install experimental
 Desktop operations launchers.
 
 ## GUI behavior

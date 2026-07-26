@@ -6,11 +6,11 @@ public sealed record AxonOptions
 {
     public string ServerName { get; init; } = "axon.home.arpa";
 
-    public string BindIp { get; init; } = "10.77.77.42";
+    public string BindIp { get; init; } = "10.20.30.2";
 
     public int PrefixLength { get; init; } = 24;
 
-    public string RouterIp { get; init; } = "10.77.77.1";
+    public string RouterIp { get; init; } = "10.20.30.1";
 
     public string AllowedRemoteAddress { get; init; } = "LocalSubnet";
 

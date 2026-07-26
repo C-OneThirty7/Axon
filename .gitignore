@@ -8,6 +8,8 @@ dist/
 tmp/
 packages/
 images/
+!docs/images/
+!docs/images/*.png
 release/
 
 # Local runtime and secrets

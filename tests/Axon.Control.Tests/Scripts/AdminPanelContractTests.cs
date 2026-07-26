@@ -19,7 +19,7 @@ public sealed class AdminPanelContractTests
         Assert.Contains("Content-Security-Policy", program);
         Assert.Contains("127.0.0.1:8780", program);
         Assert.Contains("minlength=\"10\"", html);
-        Assert.DoesNotContain("value=\"123456\"", html);
+        Assert.DoesNotContain("value=\"example-password\"", html);
         Assert.Contains("Batch issue", html);
         Assert.Contains("Rooms", html);
         Assert.Contains("Create room", html);
@@ -35,6 +35,21 @@ public sealed class AdminPanelContractTests
         Assert.Contains("MapGet(\"/api/rooms\"", program);
         Assert.Contains("MapDelete(\"/api/rooms/{roomId}\"", program);
         Assert.Contains("MapPost(\"/api/rooms/{roomId}/members\"", program);
+        Assert.Contains("MapGet(\"/api/update\"", program);
+        Assert.Contains("MapPost(\"/api/update/download\"", program);
+        Assert.Contains("MapPost(\"/api/update/install\"", program);
+        Assert.Contains("Check for updates", html);
+        Assert.Contains("Download and verify", html);
+        Assert.Contains("Install update", html);
+        Assert.Contains("include-prereleases", html);
+        Assert.Contains("/api/update?includePrereleases=", javascript);
+        Assert.Contains("/api/update/download?includePrereleases=", javascript);
+        Assert.Contains("/api/update/install", javascript);
+        Assert.Contains("github.com", javascript);
+        Assert.DoesNotContain("setInterval", javascript);
+        Assert.DoesNotMatch(
+            @"boot\(\)[\s\S]*checkForUpdates\(",
+            javascript);
         Assert.Contains("[hidden] { display: none !important; }", css);
         Assert.DoesNotContain("cdn.", html, StringComparison.OrdinalIgnoreCase);
         Assert.DoesNotContain("https://", html, StringComparison.OrdinalIgnoreCase);

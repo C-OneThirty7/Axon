@@ -103,11 +103,11 @@ class GuideDoc(BaseDocTemplate):
 def cover(title, subtitle):
     return [
         Spacer(1, 0.35*inch), p("AXON", "H2x"), p(title, "AxonTitle"), p(subtitle, "AxonSubtitle"),
-        rich("<b>v0.1.0 Offline Release</b> &nbsp; | &nbsp; Windows 11 &nbsp; | &nbsp; July 2026", "Bodyx"),
+        rich("<b>v0.3.0 Offline Release</b> &nbsp; | &nbsp; Windows 11 &nbsp; | &nbsp; July 2026", "Bodyx"),
         Spacer(1, 0.12*inch),
         table([
             ["Item", "Value"],
-            ["Homeserver URL", "Environment-specific (POC: http://192.168.0.113)"],
+            ["Homeserver URL", "Environment-specific (POC: http://10.20.30.2)"],
             ["Matrix identity", "axon.home.arpa"],
             ["Client networks", "Flat LAN or routed/NATed private subnets"],
             ["Host exposure", "TCP 80 only"],
@@ -124,19 +124,19 @@ def build_setup():
         "Windows 11 x64 build 22631 or newer with an administrator account.",
         "Hardware virtualization enabled in UEFI/BIOS.",
         "Docker supports an 8 GiB RAM baseline; 16 GiB RAM and 100 GiB free disk are recommended for the planned 200-user deployment. Capacity warnings do not block a normal Axon installation.",
-        "The Razer 18 with 32 GiB RAM and SSD/NVMe storage is comfortably suitable.",
+        "A host with 32 GiB RAM and SSD/NVMe storage provides comfortable headroom.",
         "Use a connected physical Ethernet or Wi-Fi adapter and extract the complete ZIP to a local NTFS drive.",
         "Confirm the organization is authorized to accept and use Docker Desktop; some enterprise and government use requires a paid subscription.",
     ])
     story += [p("Proven routed/NAT example", "H2x"), table([
         ["Device", "Example", "Role"],
-        ["Upstream gateway", "192.168.0.1/24", "Ubiquiti LAN gateway"],
-        ["Axon host", "192.168.0.113/24", "Stable or DHCP-reserved Windows address"],
-        ["Main network gateway", "WAN DHCP; LAN 10.77.0.1", "Routes/NATs or forwards client traffic"],
+        ["Upstream gateway", "172.20.0.1/24", "Upstream LAN gateway"],
+        ["Axon host", "10.20.30.2/24", "Stable or DHCP-reserved Windows address"],
+        ["Main network gateway", "WAN DHCP; LAN 10.30.0.1", "Routes/NATs or forwards client traffic"],
         ["Downstream routers", "Static transit addresses", "May provide their own client DHCP/NAT"],
     ], [1.6*inch, 1.9*inch, 2.75*inch])]
     story += [p("Record the Axon IP, adapter, gateway WAN/LAN addresses, downstream client CIDRs, Element-facing URL, and the source addresses Windows sees. Preserve the correct Windows NIC configuration by default.", "Callout")]
-    story += [PageBreak(), p("2. Verify and install", "H1x"), code("1. Extract Axon-v0.1.0-offline-win-x64.zip completely.\n2. Double-click Install Axon.cmd.\n3. Approve the Windows administrator prompt.")]
+    story += [PageBreak(), p("2. Verify and install", "H1x"), code("1. Extract Axon-v0.3.0-offline-win-x64.zip completely.\n2. Double-click Install Axon.cmd.\n3. Approve the Windows administrator prompt.")]
     story += bullets([
         "The launcher bypasses PowerShell policy only for its own process. It does not change the machine policy.",
         "Strict checksums run automatically before bundled installers or images. A failed hash normally means the ZIP must be copied again.",
@@ -144,13 +144,13 @@ def build_setup():
         "The installer lists connected adapters and IPv4 addresses. The default NicMode Preserve does not alter the selected address, gateway, or DNS.",
         "Create the first Matrix server administrator when prompted. Use a unique operational password of at least 12 characters.",
     ])
-    story += [p("Routed source scopes", "H2x"), code('.\\scripts\\Install-Axon.ps1 -BindIp 192.168.0.113 -InterfaceAlias "Ethernet" -AllowedRemoteAddress "10.77.0.0/24","10.88.0.0/24"')]
+    story += [p("Routed source scopes", "H2x"), code('.\\scripts\\Install-Axon.ps1 -BindIp 10.20.30.2 -InterfaceAlias "Ethernet" -AllowedRemoteAddress "10.30.0.0/24","10.40.0.0/24"')]
     story += [p("Only use NicMode Configure when Axon is explicitly authorized to change the adapter. It adds and verifies the new address before removing older IPv4 addresses.", "Callout")]
     story += [PageBreak(), p("3. Validate the running stack", "H1x"), code("powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\\scripts\\Test-Axon.ps1")]
     story += bullets([
         "postgres, synapse, and gateway must all report healthy.",
         "%ProgramData%\\Axon\\runtime\\synapse\\homeserver.yaml must exist and be non-empty.",
-        "http://192.168.0.113/_matrix/client/versions (replace with the selected IP) must return Matrix JSON.",
+        "http://10.20.30.2/_matrix/client/versions (replace with the selected IP) must return Matrix JSON.",
         "Ports 8008, 8780, and 5432 must not be reachable through the Axon LAN address.",
         "Axon Control must answer only at http://127.0.0.1:8780.",
     ])
@@ -175,11 +175,11 @@ def build_client():
         "Disable AP/client isolation and confirm the environment-specific Axon address is reachable through the intended route, NAT, or forward.",
         "No internet, cellular data, public DNS, public certificate, or push service is required for the initial test.",
     ])
-    story += [code("# Replace with the Axon address visible to this client\nTest-NetConnection 192.168.0.113 -Port 80\ncurl.exe --noproxy \"*\" http://192.168.0.113/_matrix/client/versions")]
+    story += [code("# Replace with the Axon address visible to this client\nTest-NetConnection 10.20.30.2 -Port 80\ncurl.exe --noproxy \"*\" http://10.20.30.2/_matrix/client/versions")]
     story += [p("2. Sign in", "H1x")]
     story += bullets([
         "Choose Sign in, then Change or Edit homeserver.",
-        "Enter the operator-issued URL exactly, for example http://192.168.0.113.",
+        "Enter the operator-issued URL exactly, for example http://10.20.30.2.",
         "Enter the administrator-created username and password. The full identity is @username:axon.home.arpa.",
         "Accept any client warning that internet features or push notifications are unavailable; do not substitute matrix.org.",
         "After first login, change any issued stock password in account/security settings. Axon requires at least 10 characters for GUI-issued passwords.",
@@ -193,7 +193,7 @@ def build_client():
         "Reconnect B within 48 hours and confirm synchronization.",
         "Verify unrelated application traffic independently. Axon only hosts its documented Matrix services.",
     ])
-    story += [p("Notification expectation", "H2x"), p("Synapse push processing is disabled in v0.1.0. Messages synchronize when the client is active or reconnects. Axon purges eligible server-side history after the configured lifetime; E2EE hides plaintext but does not eliminate temporary encrypted event storage.", "Bodyx")]
+    story += [p("Notification expectation", "H2x"), p("Synapse push processing is disabled. Messages synchronize when the client is active or reconnects. Axon purges eligible server-side history after the configured lifetime; E2EE hides plaintext but does not eliminate temporary encrypted event storage.", "Bodyx")]
     story += [p("Troubleshooting order", "H2x"), table([
         ["Symptom", "Check"],
         ["No TCP connection", "Client subnet, isolation, Windows NIC, firewall, and link state"],
@@ -206,7 +206,7 @@ def build_client():
 
 def build_maintenance():
     story = cover("Maintenance and Tuning Guide", "Safe changes for the offline Windows 11 Matrix deployment")
-    story += [PageBreak(), p("1. Routine operations", "H1x"), code(".\\scripts\\Test-Axon.ps1 -BindIp 192.168.0.113\n# Replace the example IP with the selected Windows address")]
+    story += [PageBreak(), p("1. Routine operations", "H1x"), code(".\\scripts\\Test-Axon.ps1 -BindIp 10.20.30.2\n# Replace the example IP with the selected Windows address")]
     story += [p("Host-only Axon Control", "H2x"), code("http://127.0.0.1:8780")]
     story += bullets([
         "Sign in with a Matrix server-administrator account; credentials are not stored.",
@@ -216,6 +216,7 @@ def build_maintenance():
         "Inspect container health and CPU/memory use; start, stop, or restart a service or the full stack.",
         "Search rooms, create private encrypted rooms, inspect membership, and add or remove local users.",
         "Read bounded PostgreSQL, Synapse, and nginx logs.",
+        "Check GitHub Releases on demand, download and verify a signed platform-matched package, then install it from the GUI.",
         "The nginx gateway blocks external Synapse admin paths; ports 8008 and 8780 remain loopback-only.",
     ])
     story += [p("Room administration", "H2x")]
@@ -234,10 +235,10 @@ def build_maintenance():
         "A 48-hour policy is not a guaranteed exact deletion timestamp; purge jobs run on an interval.",
         "Changing retention affects future server behavior and must be tested with disposable accounts before operational use.",
     ])
-    story += [code("Copy-Item $env:ProgramData\\Axon\\runtime\\synapse\\homeserver.yaml `\n  $env:ProgramData\\Axon\\runtime\\synapse\\homeserver.yaml.bak\n# Edit retention values, restart Synapse in Axon Control, then:\n.\\scripts\\Test-Axon.ps1 -BindIp 192.168.0.113")]
+    story += [code("Copy-Item $env:ProgramData\\Axon\\runtime\\synapse\\homeserver.yaml `\n  $env:ProgramData\\Axon\\runtime\\synapse\\homeserver.yaml.bak\n# Edit retention values, restart Synapse in Axon Control, then:\n.\\scripts\\Test-Axon.ps1 -BindIp 10.20.30.2")]
     story += [PageBreak(), p("3. Resource tuning", "H1x")]
     story += bullets([
-        "For the 200-user messaging POC, 4 or more modern CPU cores, 16 GiB RAM, and SSD/NVMe storage are recommended. The 32 GiB Razer provides useful headroom.",
+        "For the 200-user messaging POC, 4 or more modern CPU cores, 16 GiB RAM, and SSD/NVMe storage are recommended. A 32 GiB host provides useful headroom.",
         "Docker Desktop with WSL 2 shares Windows resources dynamically. Do not impose low WSL limits before collecting real usage data.",
         "Low RAM or disk produces an advisory warning during normal installation rather than blocking it. Record the warning and reduce the expected capacity.",
         "Keep 100 GiB free as the operational target and monitor any host below 20 GiB closely during image extraction and soak testing.",
@@ -258,6 +259,7 @@ def build_maintenance():
         "Normal uninstall stops services and removes Axon firewall rules while preserving data.",
         "Permanent deletion requires -PurgeData plus the exact PURGE AXON confirmation and cannot be undone from Axon.",
     ])
+    story += [p("Click-through signed updates", "H2x"), p("The Updates page contacts the public C-OneThirty7/Axon GitHub Releases feed only when an authenticated administrator clicks Check for updates. Select Download and verify to stage the matching package; Axon checks both SHA-256 and its release signature. A separate Install update confirmation preserves configuration, applies the release through the host updater, restarts required services, and reconnects the panel. Axon never polls or installs in the background.", "Bodyx")]
     story += [p("Control-panel-only update", "H2x"), p("Extract the Axon Control upgrade ZIP on the Windows host, double-click Update Axon Control.cmd, and approve the administrator prompt. The updater validates its payload, stops only the host-only control task, backs up the installed control panel under %ProgramData%\\Axon\\control-backups, installs the update, verifies it, and rolls back automatically if TCP 8780 does not return.", "Bodyx")]
     GuideDoc(OUTPUT / "Axon_Maintenance_and_Tuning_Guide.pdf", "Axon Maintenance and Tuning Guide").build(story)
 

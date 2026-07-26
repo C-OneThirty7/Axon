@@ -59,7 +59,7 @@ public sealed class SharedSecretRegisterTests
             new HttpClient(handler) { BaseAddress = new Uri("http://127.0.0.1:8008") },
             new FixedSecretProvider(secret));
 
-        var result = await register.RegisterAsync("user1", password, admin: false);
+        var result = await register.RegisterAsync("member001", password, admin: false);
 
         Assert.False(result.Success);
         Assert.DoesNotContain(password, result.Error, StringComparison.Ordinal);

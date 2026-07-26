@@ -31,7 +31,7 @@ Open Windows PowerShell as Administrator in the original Axon folder:
 ```powershell
 Set-ExecutionPolicy -Scope Process Bypass -Force
 .\scripts\network-audit\Start-AxonTrafficAudit.ps1 `
-    -BindIp 192.168.0.54 `
+    -BindIp 10.20.30.2 `
     -Scenario idle-two-clients `
     -DurationSeconds 300
 ```
@@ -58,7 +58,7 @@ If TShark is installed on the analysis system:
 ```powershell
 .\scripts\network-audit\Summarize-AxonPcap.ps1 `
     -PcapPath C:\ProgramData\Axon\network-audits\<RUN>\axon-traffic.pcapng `
-    -BindIp 192.168.0.54
+    -BindIp 10.20.30.2
 ```
 
 The summary reports frame count, Ethernet/IP wire bytes, inbound/outbound bytes,
@@ -86,7 +86,7 @@ Optional UDP ports or multicast groups can be classified separately:
 ```powershell
 .\scripts\network-audit\Summarize-AxonPcap.ps1 `
     -PcapPath .\shared-network.pcapng `
-    -BindIp 192.168.0.54 `
+    -BindIp 10.20.30.2 `
     -ComparisonUdpPort 6969 `
     -ComparisonMulticastAddress 239.2.3.1
 ```

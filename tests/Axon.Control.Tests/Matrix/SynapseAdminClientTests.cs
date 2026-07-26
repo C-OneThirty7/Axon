@@ -16,7 +16,7 @@ public sealed class SynapseAdminClientTests
             BaseAddress = new Uri("http://127.0.0.1:8008")
         });
 
-        var result = await client.LoginAsync("operator", "123456");
+        var result = await client.LoginAsync("operator", "example-password");
 
         Assert.True(result.Success);
         Assert.Equal("@operator:axon.home.arpa", result.UserId);
@@ -35,7 +35,7 @@ public sealed class SynapseAdminClientTests
             BaseAddress = new Uri("http://127.0.0.1:8008")
         });
 
-        var result = await client.LoginAsync("operator", "123456");
+        var result = await client.LoginAsync("operator", "example-password");
 
         Assert.False(result.Success);
         Assert.Contains("not a server administrator", result.Error);
@@ -102,7 +102,7 @@ public sealed class SynapseAdminClientTests
         Assert.True(rooms.Rooms[0].Encrypted);
         Assert.Contains("search_term=ops", handler.Requests[0].Path);
         Assert.NotNull(members);
-        Assert.Equal(["@user1:axon.home.arpa", "@user2:axon.home.arpa"], members.Members);
+        Assert.Equal(["@member001:axon.home.arpa", "@member002:axon.home.arpa"], members.Members);
     }
 
     [Fact]
@@ -116,7 +116,7 @@ public sealed class SynapseAdminClientTests
             new RoomCreation(
                 "Operations",
                 "Primary room",
-                ["@user1:axon.home.arpa", "@user2:axon.home.arpa"]));
+                ["@member001:axon.home.arpa", "@member002:axon.home.arpa"]));
 
         Assert.True(result.Success);
         Assert.Equal("!created:axon.home.arpa", result.Value);
@@ -164,7 +164,7 @@ public sealed class SynapseAdminClientTests
             "admin-token",
             "@operator:axon.home.arpa",
             "!ops:axon.home.arpa",
-            "@user2:axon.home.arpa");
+            "@member002:axon.home.arpa");
 
         Assert.True(result.Success);
         Assert.Collection(
@@ -262,7 +262,7 @@ public sealed class SynapseAdminClientTests
             if (path.EndsWith("/members", StringComparison.Ordinal))
             {
                 return Json(HttpStatusCode.OK,
-                    """{"members":["@user1:axon.home.arpa","@user2:axon.home.arpa"],"total":2}""");
+                    """{"members":["@member001:axon.home.arpa","@member002:axon.home.arpa"],"total":2}""");
             }
             if (path == "/_matrix/client/v3/createRoom")
             {

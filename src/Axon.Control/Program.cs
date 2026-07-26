@@ -1,15 +1,17 @@
 using System.Net;
+using System.Security.Cryptography;
 using Axon.Control.Installation;
 using Axon.Control.Matrix;
 using Axon.Control.Runtime;
 using Axon.Control.Security;
+using Axon.Control.Updates;
 
 namespace Axon.Control;
 
 public static class ProductInfo
 {
     public const string Name = "Axon";
-    public const string Version = "0.2.0";
+    public const string Version = "0.3.0";
     public const string ServerName = "axon.home.arpa";
 }
 
@@ -39,6 +41,11 @@ public partial class Program
 {
     public static async Task<int> Main(string[] args)
     {
+        if (args.Length == 3 &&
+            string.Equals(args[0], "verify-update", StringComparison.Ordinal))
+        {
+            return await VerifyUpdateAsync(args[1], args[2]);
+        }
         if (args.Length > 0 && string.Equals(args[0], "render-runtime", StringComparison.Ordinal))
         {
             return await RenderRuntimeAsync(args[1..]);
@@ -66,6 +73,14 @@ public partial class Program
             new SynapseAdminClient(SynapseClient.CreateLoopbackHttpClient()));
         builder.Services.AddSingleton(_ =>
             new SynapseClient(SynapseClient.CreateLoopbackHttpClient()));
+        builder.Services.AddSingleton(_ =>
+            new GithubReleaseClient(GithubReleaseClient.CreateHttpClient()));
+        builder.Services.AddSingleton(provider =>
+            new UpdateManager(
+                UpdateManager.CreateHttpClient(),
+                provider.GetRequiredService<GithubReleaseClient>(),
+                bundleRoot,
+                dataRoot));
 
         var app = builder.Build();
         app.Use(async (context, next) =>
@@ -429,9 +444,89 @@ public partial class Program
                 : Results.Json(new { error = $"Stack {request.Action} failed." }, statusCode: 502);
         });
 
+        app.MapGet("/api/update", async (
+            HttpContext context,
+            OperatorSessions sessions,
+            GithubReleaseClient updates,
+            bool? includePrereleases,
+            CancellationToken cancellationToken) =>
+        {
+            if (!TrySession(context, sessions, out _)) return Results.Unauthorized();
+            var result = await updates.CheckAsync(
+                ProductInfo.Version,
+                UpdatePlatform.Detect(),
+                includePrereleases ?? false,
+                cancellationToken);
+            return Results.Ok(result);
+        });
+
+        app.MapGet("/api/update/status", (
+            HttpContext context,
+            OperatorSessions sessions,
+            UpdateManager updates) =>
+        {
+            return TrySession(context, sessions, out _)
+                ? Results.Ok(updates.GetStatus())
+                : Results.Unauthorized();
+        });
+
+        app.MapPost("/api/update/download", (
+            HttpContext context,
+            OperatorSessions sessions,
+            UpdateManager updates,
+            bool? includePrereleases) =>
+        {
+            if (!TrySession(context, sessions, out _)) return Results.Unauthorized();
+            return Results.Accepted(value: updates.StartDownload(includePrereleases ?? false));
+        });
+
+        app.MapPost("/api/update/install", async (
+            HttpContext context,
+            OperatorSessions sessions,
+            UpdateManager updates,
+            CancellationToken cancellationToken) =>
+        {
+            if (!TrySession(context, sessions, out _)) return Results.Unauthorized();
+            var result = await updates.StartInstallAsync(cancellationToken);
+            if (!string.Equals(result.State, "installing", StringComparison.Ordinal))
+            {
+                return Results.Json(new { error = result.Message }, statusCode: 409);
+            }
+
+            if (OperatingSystem.IsWindows())
+            {
+                _ = Task.Run(async () =>
+                {
+                    await Task.Delay(1500);
+                    app.Lifetime.StopApplication();
+                });
+            }
+            return Results.Accepted(value: result);
+        });
+
         app.MapFallbackToFile("index.html");
         await app.RunAsync();
         return 0;
+    }
+
+    private static async Task<int> VerifyUpdateAsync(string archivePath, string signaturePath)
+    {
+        try
+        {
+            var verified = await ReleaseSignatureVerifier.VerifyAsync(
+                archivePath,
+                signaturePath);
+            Console.WriteLine(verified
+                ? "Axon release signature verified."
+                : "Axon release signature verification failed.");
+            return verified ? 0 : 3;
+        }
+        catch (Exception exception) when (
+            exception is IOException or UnauthorizedAccessException or CryptographicException)
+        {
+            Console.Error.WriteLine($"Axon release signature verification failed: {exception.Message}");
+            return 3;
+        }
     }
 
     private static async Task<int> RenderRuntimeAsync(string[] args)

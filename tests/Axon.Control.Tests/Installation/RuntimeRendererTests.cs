@@ -25,7 +25,7 @@ public sealed class RuntimeRendererTests : IDisposable
             $"matrixdotorg/synapse@sha256:{new string('a', 64)}",
             $"postgres@sha256:{new string('b', 64)}",
             $"nginx@sha256:{new string('c', 64)}");
-        var options = AxonOptions.Default with { BindIp = "10.77.77.42" };
+        var options = AxonOptions.Default with { BindIp = "10.20.30.2" };
 
         await new RuntimeRenderer(new SecretGenerator()).RenderAsync(
             bundleRoot,
@@ -41,9 +41,9 @@ public sealed class RuntimeRendererTests : IDisposable
         Assert.True(File.Exists(nginxPath));
         Assert.True(File.Exists(envPath));
         Assert.DoesNotContain("${", await File.ReadAllTextAsync(homeserverPath));
-        Assert.Contains("http://10.77.77.42/", await File.ReadAllTextAsync(homeserverPath));
+        Assert.Contains("http://10.20.30.2/", await File.ReadAllTextAsync(homeserverPath));
         var env = await File.ReadAllTextAsync(envPath);
-        Assert.Contains("AXON_BIND_IP=10.77.77.42", env);
+        Assert.Contains("AXON_BIND_IP=10.20.30.2", env);
         Assert.Contains(images.Synapse, env);
         Assert.Contains(images.Postgres, env);
         Assert.Contains(images.Nginx, env);

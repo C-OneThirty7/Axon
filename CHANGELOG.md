@@ -1,6 +1,6 @@
 # Changelog
 
-## [Unreleased]
+## [0.3.0] - 2026-07-26
 
 ### Added
 
@@ -11,10 +11,14 @@
 - Scoped Docker ingress firewall rules for approved client CIDRs.
 - Online and fully offline Linux installer modes.
 - GitHub Actions validation and repository community metadata.
+- Signed, click-through, platform-aware GitHub release updates in Axon Control.
+- Windows rollback handoff and root-owned Linux systemd update service.
+- Axon Control screenshots and administrator feature documentation.
 
 ### Changed
 
 - Axon Control now publishes for Windows x64, Linux x64, and Linux ARM64.
+- Windows and Ubuntu AMD64 offline bundles share one release version.
 
 ## [0.1.0] - 2026-07-26
 

@@ -16,14 +16,14 @@ Record these values before running the installer:
 
 | Value | Example from the proven POC | New environment |
 |---|---|---|
-| Axon host address | `192.168.0.113/24` | |
+| Axon host address | `10.20.30.2/24` | |
 | Axon host adapter | Mac Wi-Fi during POC; dedicated Windows Ethernet for release | |
-| Upstream gateway | `192.168.0.1` | |
-| Main network gateway WAN | DHCP reservation, example `192.168.0.153` | |
-| Main network gateway LAN | `10.77.0.1/24` | |
-| Downstream router transit addresses | static, example `10.77.0.6` | |
+| Upstream gateway | `172.20.0.1` | |
+| Main network gateway WAN | DHCP reservation, example `172.20.0.50` | |
+| Main network gateway LAN | `10.30.0.1/24` | |
+| Downstream router transit addresses | static, example `10.30.0.6` | |
 | Downstream client DHCP networks | router-specific | |
-| Element URL visible to clients | `http://192.168.0.113` in the POC | |
+| Element URL visible to clients | `http://10.20.30.2` in the POC | |
 | Source address Windows sees | local gateway/NAT address or routed client address | |
 | Windows Firewall remote scope | `LocalSubnet` or explicit CIDR list | |
 
@@ -48,13 +48,13 @@ Element clients -- bridged network -- Axon Windows host
 This matches the proven POC:
 
 ```text
-Ubiquiti/upstream LAN
-  gateway 192.168.0.1
+Upstream LAN
+  gateway 172.20.0.1
   |
-  +-- Axon host 192.168.0.113
+  +-- Axon host 10.20.30.2
   |
-  +-- main network gateway WAN (DHCP/reserved, e.g. 192.168.0.153)
-       client-network address 10.77.0.1
+  +-- main network gateway WAN (DHCP/reserved, e.g. 172.20.0.50)
+       client-network address 10.30.0.1
        |
        +-- downstream routers (static transit addresses)
             |
@@ -96,7 +96,7 @@ NATed gateway traffic whose source appears local to Windows:
 
 ```powershell
 .\scripts\Install-Axon.ps1 `
-    -BindIp 192.168.0.113 `
+    -BindIp 10.20.30.2 `
     -InterfaceAlias "Ethernet" `
     -AllowedRemoteAddress LocalSubnet
 ```
@@ -105,9 +105,9 @@ Routed client networks:
 
 ```powershell
 .\scripts\Install-Axon.ps1 `
-    -BindIp 192.168.0.113 `
+    -BindIp 10.20.30.2 `
     -InterfaceAlias "Ethernet" `
-    -AllowedRemoteAddress "10.77.0.0/24","10.88.0.0/24"
+    -AllowedRemoteAddress "10.30.0.0/24","10.40.0.0/24"
 ```
 
 Only use `-NicMode Configure` when Axon is deliberately authorized to change that adapter. It adds and verifies the requested address before removing any older address and requires exact typed confirmation.

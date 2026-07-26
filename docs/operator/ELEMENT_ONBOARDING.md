@@ -6,7 +6,7 @@
 2. Confirm the environment-specific Axon address on TCP port 80 is reachable.
 3. Open Element or Element X and choose **Sign in**.
 4. Edit/change the homeserver.
-5. Enter the exact URL issued by the operator, for example `http://192.168.0.113`.
+5. Enter the exact URL issued by the operator, for example `http://10.20.30.2`.
 6. Enter the Axon-created username and password.
 
 The Matrix user ID remains `@username:axon.home.arpa` even though the connection URL is an IP address.
@@ -26,7 +26,7 @@ No internet push notification is expected. Clients receive changes while connect
 
 After the first login, change an issued stock password under Element/Element X account or security settings. Stock clients do not enforce this automatically.
 
-Axon v0.1.0 disables Synapse push processing, public room search, federation,
+Axon disables Synapse push processing, public room search, federation,
 media, presence, and URL previews. Rooms created by local clients are encrypted
 by default. These controls reduce unnecessary traffic and exposure but do not
 turn HTTP into encrypted transport: use Axon only on the trusted closed network

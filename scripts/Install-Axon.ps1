@@ -13,6 +13,7 @@ param(
     [ValidateSet("Preserve", "Configure")][string]$NicMode = "Preserve",
     [switch]$StrictPreflight,
     [switch]$Repair,
+    [switch]$Upgrade,
     [switch]$SkipInitialUser
 )
 
@@ -151,10 +152,32 @@ function Initialize-AxonRuntime {
             POSTGRES_IMAGE = $PostgresImage
             NGINX_IMAGE = $NginxImage
         }
-        foreach ($entry in $expectedRuntime.GetEnumerator()) {
-            if ($savedEnvironment[$entry.Key] -cne $entry.Value) {
-                throw "Existing runtime value '$($entry.Key)' differs from this bundle. Use the original Axon bundle or perform an explicit migration."
+        $changedEntries = @($expectedRuntime.GetEnumerator() | Where-Object {
+            $savedEnvironment[$_.Key] -cne $_.Value
+        })
+        if ($changedEntries.Count -gt 0 -and -not $Upgrade) {
+            $names = $changedEntries.Key -join ", "
+            throw "Existing runtime image values differ from this bundle ($names). Use Axon Control's verified update process or rerun with -Upgrade."
+        }
+        if ($changedEntries.Count -gt 0) {
+            $environmentLines = @(Get-Content -LiteralPath $EnvironmentPath)
+            foreach ($entry in $changedEntries) {
+                $found = $false
+                for ($index = 0; $index -lt $environmentLines.Count; $index++) {
+                    if ($environmentLines[$index] -match "^$([Regex]::Escape($entry.Key))=") {
+                        $environmentLines[$index] = "$($entry.Key)=$($entry.Value)"
+                        $found = $true
+                    }
+                }
+                if (-not $found) {
+                    $environmentLines += "$($entry.Key)=$($entry.Value)"
+                }
             }
+            [IO.File]::WriteAllLines(
+                $EnvironmentPath,
+                $environmentLines,
+                [Text.UTF8Encoding]::new($false))
+            Write-Host "Updated immutable runtime image references for the verified Axon upgrade."
         }
         Write-Host "Reusing the existing protected Axon runtime and secrets."
     }

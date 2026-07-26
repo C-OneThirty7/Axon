@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Axon Control</title>
-  <link rel="stylesheet" href="/app.css?v=4">
+  <link rel="stylesheet" href="/app.css?v=5">
 </head>
 <body>
   <div id="login" class="login-shell" hidden>
@@ -36,6 +36,7 @@
         <button class="nav-item" data-view="rooms"><span>03</span>Rooms</button>
         <button class="nav-item" data-view="batch"><span>04</span>Batch issue</button>
         <button class="nav-item" data-view="logs"><span>05</span>Logs</button>
+        <button class="nav-item" data-view="updates"><span>06</span>Updates</button>
       </nav>
       <div class="aside-footer">
         <span id="operator">Not signed in</span>
@@ -161,6 +162,47 @@ user003</pre>
         </div>
         <pre id="logs" class="logs">Select Refresh logs to load the latest bounded output.</pre>
       </section>
+
+      <section id="view-updates" class="view">
+        <div class="section-head">
+          <div>
+            <p class="eyebrow">RELEASE CHANNEL</p>
+            <h2>Axon updates</h2>
+          </div>
+          <button id="check-updates" class="primary">Check for updates</button>
+        </div>
+        <p class="scope-note">Axon contacts the public C-OneThirty7/Axon GitHub repository only when an administrator selects this button. No periodic update traffic is generated.</p>
+        <div id="update-card" class="update-card">
+          <div class="update-heading">
+            <div>
+              <span class="update-kicker">CURRENT INSTALLATION</span>
+              <strong id="update-current">Axon v0.3.0</strong>
+            </div>
+            <span id="update-state" class="tag">Not checked</span>
+          </div>
+          <dl class="update-facts">
+            <div><dt>Host platform</dt><dd id="update-platform">Detected when checked</dd></div>
+            <div><dt>Latest compatible</dt><dd id="update-latest">-</dd></div>
+            <div><dt>Release channel</dt><dd id="update-channel">Stable</dd></div>
+            <div><dt>Published</dt><dd id="update-published">-</dd></div>
+          </dl>
+          <p id="update-message" class="update-message">No network request has been made.</p>
+          <div id="update-actions" class="button-group update-actions" hidden>
+            <button id="update-download" class="primary">Download and verify</button>
+            <button id="update-install" class="primary" hidden>Install update</button>
+            <a id="update-release" class="button-link secondary" target="_blank" rel="noopener">Release notes</a>
+          </div>
+          <div id="update-progress" class="update-progress" hidden>
+            <div><span id="update-progress-label">Preparing download</span><b id="update-progress-value">0%</b></div>
+            <progress id="update-progress-bar" max="100" value="0"></progress>
+          </div>
+        </div>
+        <label class="check update-option">
+          <input id="include-prereleases" type="checkbox">
+          Include prerelease packages intended for testing
+        </label>
+        <p class="notice"><b>You remain in control:</b> Axon checks only when requested, verifies the release checksum before enabling installation, and requires a separate confirmation before applying the update. The host updater preserves configuration and restarts the required services automatically.</p>
+      </section>
     </main>
   </div>
 
@@ -189,7 +231,7 @@ user003</pre>
       <label>Room name<input name="name" maxlength="128" required></label>
       <label>Topic<input name="topic" maxlength="1024"></label>
       <label>Invite local users
-        <input name="invite" placeholder="user1, user2">
+        <input name="invite" placeholder="member001, member002">
       </label>
       <p class="form-note">Enter usernames or full Axon IDs separated by commas. The room is always private, E2EE-enabled, and non-federated.</p>
       <p id="room-error" class="form-error" role="alert"></p>
@@ -224,6 +266,6 @@ user003</pre>
   </aside>
 
   <div id="toast" class="toast" hidden></div>
-  <script src="/app.js?v=5"></script>
+  <script src="/app.js?v=6"></script>
 </body>
 </html>

@@ -42,6 +42,27 @@ public sealed class LinuxDeploymentContractTests
     }
 
     [Fact]
+    public void Linux_click_update_uses_root_owned_service_and_verified_archive()
+    {
+        var installer = DeployTestFiles.Read("installer/linux/install.sh");
+        var updater = DeployTestFiles.Read("installer/linux/axon-apply-update");
+        var pathUnit = DeployTestFiles.Read("deploy/systemd/axon-update.path");
+        var serviceUnit = DeployTestFiles.Read("deploy/systemd/axon-update.service");
+
+        Assert.Contains("axon-update.path", installer);
+        Assert.Contains("/usr/local/sbin/axon-apply-update", installer);
+        Assert.Contains("PathExists=/var/lib/axon/updates/install-request.json", pathUnit);
+        Assert.Contains("User=root", serviceUnit);
+        Assert.Contains("sha256sum", updater);
+        Assert.Contains("manifests/SHA256SUMS", updater);
+        Assert.Contains("--upgrade", updater);
+        Assert.Contains("restore_previous", updater);
+        Assert.Contains("systemctl stop axon-control.service", updater);
+        Assert.DoesNotContain("curl ", updater);
+        Assert.DoesNotContain("wget ", updater);
+    }
+
+    [Fact]
     public void Firewall_uses_scoped_docker_user_chain()
     {
         var firewall = DeployTestFiles.Read("installer/linux/configure-firewall.sh");

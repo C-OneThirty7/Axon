@@ -141,4 +141,22 @@ public sealed class WindowsScriptContractTests
         Assert.Contains("files = @($manifest)", builder);
         Assert.Contains("Update-AxonControl.ps1", launcher);
     }
+
+    [Fact]
+    public void Release_updater_reverifies_extracts_upgrades_and_recovers()
+    {
+        var updater = DeployTestFiles.Read("scripts/Invoke-AxonUpdate.ps1");
+        var installer = DeployTestFiles.Read("scripts/Install-Axon.ps1");
+
+        Assert.Contains("#Requires -RunAsAdministrator", updater);
+        Assert.Contains("Get-FileHash", updater);
+        Assert.Contains("Assert-ZipEntriesSafe", updater);
+        Assert.Contains("Test-AxonBundle.ps1", updater);
+        Assert.Contains("install-state.json", updater);
+        Assert.Contains("-Upgrade", updater);
+        Assert.Contains("Restore-PreviousRuntime", updater);
+        Assert.Contains("Start-ScheduledTask", updater);
+        Assert.Contains("[switch]$Upgrade", installer);
+        Assert.DoesNotContain("Invoke-WebRequest", updater);
+    }
 }

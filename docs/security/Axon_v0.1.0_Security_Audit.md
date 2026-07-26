@@ -60,7 +60,7 @@ and the current primary Synapse, Docker Desktop, and WSL documentation.
 - Severity before fix: Medium
 - Impact: Short shared stock passwords were easier to guess or reuse.
 - Resolution: individual and batch GUI issuance now requires 10-256
-  characters and no longer pre-populates `123456`.
+  characters and no longer pre-populates a weak six-character password.
 - Evidence: `src/Axon.Control/Matrix/SynapseAdminClient.cs`,
   `src/Axon.Control/wwwroot/index.html`.
 

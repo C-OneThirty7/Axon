@@ -56,7 +56,7 @@ Existing usernames are never overwritten during batch issuance. Treat issued
 CSV files as sensitive, distribute them privately, and delete them when no
 longer needed.
 
-Axon v0.1.0 requires newly issued GUI passwords to contain at least 10
+Axon requires newly issued GUI passwords to contain at least 10
 characters. Use a unique stock password for each operational batch and require
 users to change it after first login.
 
@@ -105,3 +105,27 @@ complete host audit, run:
 If the GUI is unavailable but Matrix clients still work, verify that the
 scheduled task named `Axon Control Panel` is running and that TCP 8780 answers
 only on `127.0.0.1`.
+
+## Release updates
+
+The Updates page can check the public
+[`C-OneThirty7/Axon`](https://github.com/C-OneThirty7/Axon) GitHub Releases
+feed. The request occurs only when an authenticated administrator selects
+`Check for updates`; Axon does not create periodic update traffic.
+
+The checker detects the host operating system and architecture and ignores
+incompatible release assets. Prereleases are excluded unless the administrator
+explicitly enables them.
+
+Select `Download and verify` to stage the matching package. Axon verifies the
+published SHA-256 value and the Axon release signature before it enables
+`Install update`. Installation requires a separate confirmation, preserves the
+existing identity domain, address, secrets, accounts, rooms, and retention
+configuration, advances the pinned container images, and restarts the required
+services. The page reconnects after Axon Control returns.
+
+On Windows, an elevated detached PowerShell helper performs the handoff and can
+restore the previous runtime if installation fails. On Linux, the unprivileged
+panel writes a narrowly validated request for a root-owned systemd updater; the
+root helper independently verifies the signature and archive again before
+executing any release content.

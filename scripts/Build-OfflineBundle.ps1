@@ -2,7 +2,7 @@
 [CmdletBinding()]
 param(
     [string]$OutputRoot = (Join-Path (Split-Path -Parent $PSScriptRoot) "dist"),
-    [ValidatePattern('^\d+\.\d+\.\d+$')][string]$Version = "0.1.0"
+    [ValidatePattern('^\d+\.\d+\.\d+$')][string]$Version = "0.3.0"
 )
 
 Set-StrictMode -Version Latest
@@ -86,6 +86,7 @@ Copy-Item -LiteralPath (Join-Path $SourceRoot "deploy\compose.yaml") -Destinatio
 Copy-Item -LiteralPath (Join-Path $SourceRoot "deploy\nginx") -Destination (Join-Path $BundleRoot "deploy\nginx") -Recurse
 Copy-Item -LiteralPath (Join-Path $SourceRoot "deploy\synapse") -Destination (Join-Path $BundleRoot "deploy\synapse") -Recurse
 Copy-Item -LiteralPath (Join-Path $SourceRoot "scripts\Install-Axon.ps1") -Destination (Join-Path $BundleRoot "scripts\Install-Axon.ps1")
+Copy-Item -LiteralPath (Join-Path $SourceRoot "scripts\Invoke-AxonUpdate.ps1") -Destination (Join-Path $BundleRoot "scripts\Invoke-AxonUpdate.ps1")
 Copy-Item -LiteralPath (Join-Path $SourceRoot "scripts\Axon.Common.psm1") -Destination (Join-Path $BundleRoot "scripts\Axon.Common.psm1")
 Copy-Item -LiteralPath (Join-Path $SourceRoot "scripts\Test-AxonBundle.ps1") -Destination (Join-Path $BundleRoot "scripts\Test-AxonBundle.ps1")
 Copy-Item -LiteralPath (Join-Path $SourceRoot "scripts\Repair-Axon.ps1") -Destination (Join-Path $BundleRoot "scripts\Repair-Axon.ps1")
@@ -107,6 +108,7 @@ Get-ChildItem -LiteralPath $PdfGuideSource -Filter "*.pdf" -File | ForEach-Objec
     Copy-Item -LiteralPath $_.FullName -Destination (Join-Path $BundleRoot "docs\user-guides\$($_.Name)")
 }
 Copy-Item -LiteralPath $InputPath -Destination (Join-Path $BundleRoot "manifests\release-inputs.json")
+Copy-Item -LiteralPath (Join-Path $SourceRoot "manifests\axon-release-public-key.pem") -Destination (Join-Path $BundleRoot "manifests\axon-release-public-key.pem")
 
 foreach ($reference in @($synapseTagged, [string]$inputs.postgresImage, [string]$inputs.nginxImage)) {
     Invoke-Docker pull --platform linux/amd64 $reference

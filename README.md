@@ -18,8 +18,8 @@ Desktop, or operating-system packages.
 
 | Axon host | Release status | Download this asset | Installation guide |
 |---|---|---|---|
-| Windows 11 x64 | Tested offline release | `Axon-v0.1.0-offline-win-x64.zip` | [Windows installation](docs/installation/INSTALL_WINDOWS.md) |
-| Ubuntu Server 24.04 AMD64 | Validated offline release candidate | `Axon-v0.2.0-offline-ubuntu-24.04-amd64.tar.gz` | [Linux installation](docs/installation/INSTALL_LINUX.md) |
+| Windows 11 x64 | Tested offline release | `Axon-v0.3.0-offline-win-x64.zip` | [Windows installation](docs/installation/INSTALL_WINDOWS.md) |
+| Ubuntu Server 24.04 AMD64 | Validated offline release | `Axon-v0.3.0-offline-ubuntu-24.04-amd64.tar.gz` | [Linux installation](docs/installation/INSTALL_LINUX.md) |
 | Debian 13 AMD64 | Installer and builder supported; no published asset yet | Build the Debian archive from source | [Linux installation](docs/installation/INSTALL_LINUX.md) |
 | Linux ARM64 | Installer and builder supported; no published asset yet | Build the matching ARM64 archive from source | [Linux installation](docs/installation/INSTALL_LINUX.md) |
 | macOS | Development/POC only; no supported offline installer | No end-user asset yet | [macOS status](docs/installation/INSTALL_MACOS.md) |
@@ -30,7 +30,7 @@ and the client's HTTP/TLS policy.
 
 ## Windows quick start
 
-1. Download `Axon-v0.1.0-offline-win-x64.zip`.
+1. Download `Axon-v0.3.0-offline-win-x64.zip`.
 2. Verify its SHA-256 checksum against the release page.
 3. Extract the entire ZIP to a local NTFS folder.
 4. Double-click `Install Axon.cmd` and approve the administrator prompt.
@@ -45,8 +45,8 @@ installing on a routed or multi-NIC host.
 For the published Ubuntu AMD64 bundle:
 
 ```bash
-tar -xzf Axon-v0.2.0-offline-ubuntu-24.04-amd64.tar.gz
-cd Axon-v0.2.0-offline-ubuntu-24.04-amd64
+tar -xzf Axon-v0.3.0-offline-ubuntu-24.04-amd64.tar.gz
+cd Axon-v0.3.0-offline-ubuntu-24.04-amd64
 sudo ./installer/linux/install.sh --offline
 ```
 
@@ -72,6 +72,30 @@ ssh -L 8780:127.0.0.1:8780 operator@axon-host
 ```
 
 Then browse to `http://127.0.0.1:8780`.
+
+## Custom administration panel
+
+Every supported Axon deployment includes **Axon Control**, a custom web GUI
+for day-to-day server administration. It runs on the host at
+`http://127.0.0.1:8780` and is not exposed to Matrix client networks.
+
+Axon Control provides:
+
+- stack and individual-service health, resource use, logs, and controls;
+- individual and batch user provisioning, password resets, role changes, and
+  account locking;
+- encrypted room creation, membership control, and destructive room purge;
+- signed, click-through GitHub updates matched to the host platform.
+
+The update page contacts GitHub only when an administrator clicks **Check for
+updates**. A separate **Download and verify** action checks both SHA-256 and the
+Axon release signature. **Install update** preserves configuration, applies the
+release through the host updater, restarts the required services, and reconnects
+the panel. Axon never polls or installs in the background.
+
+![Axon Control system overview](docs/images/axon-control-overview.png)
+
+![Axon Control release updates](docs/images/axon-control-updates.png)
 
 ## Important security boundary
 

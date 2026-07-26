@@ -11,7 +11,7 @@ public sealed class RuntimeRenderCommandTests
         [
             "/bundle",
             "/data",
-            "10.77.77.42",
+            "10.20.30.2",
             $"synapse@sha256:{new string('a', 64)}",
             $"postgres@sha256:{new string('b', 64)}",
             $"nginx@sha256:{new string('c', 64)}"
@@ -19,7 +19,7 @@ public sealed class RuntimeRenderCommandTests
 
         Assert.Equal("/bundle", command.BundleRoot);
         Assert.Equal("/data", command.DataRoot);
-        Assert.Equal("10.77.77.42", command.Options.BindIp);
+        Assert.Equal("10.20.30.2", command.Options.BindIp);
         Assert.StartsWith("synapse@sha256:", command.Images.Synapse);
     }
 

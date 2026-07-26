@@ -38,8 +38,8 @@ ip -4 route
 For example:
 
 ```text
-Axon host:       10.77.77.42/24
-Approved CIDR:   10.77.77.0/24
+Axon host:       10.20.30.2/24
+Approved CIDR:   10.20.30.0/24
 Router/gateway:  determined by the deployment network
 ```
 
@@ -50,8 +50,8 @@ Axon does not require the Matrix host to be the clients' default gateway.
 Extract the matching release:
 
 ```bash
-tar -xzf Axon-v0.2.0-offline-ubuntu-24.04-amd64.tar.gz
-cd Axon-v0.2.0-offline-ubuntu-24.04-amd64
+tar -xzf Axon-v0.3.0-offline-ubuntu-24.04-amd64.tar.gz
+cd Axon-v0.3.0-offline-ubuntu-24.04-amd64
 sudo ./installer/linux/install.sh --offline
 ```
 
@@ -62,8 +62,8 @@ it. With several addresses, select interactively or provide exact values:
 sudo ./installer/linux/install.sh \
   --offline \
   --interface enp3s0 \
-  --bind-ip 10.77.77.42 \
-  --allowed-cidr 10.77.77.0/24
+  --bind-ip 10.20.30.2 \
+  --allowed-cidr 10.20.30.0/24
 ```
 
 Multiple routed client networks are supported:
@@ -71,9 +71,9 @@ Multiple routed client networks are supported:
 ```bash
 sudo ./installer/linux/install.sh \
   --offline \
-  --bind-ip 192.168.0.113 \
-  --allowed-cidr 10.77.0.0/24 \
-  --allowed-cidr 192.168.0.0/24
+  --bind-ip 10.20.30.2 \
+  --allowed-cidr 10.30.0.0/24 \
+  --allowed-cidr 10.40.0.0/24
 ```
 
 The installation:

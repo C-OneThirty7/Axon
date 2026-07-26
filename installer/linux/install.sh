@@ -19,6 +19,7 @@ non_interactive=0
 strict_preflight=0
 skip_firewall=0
 skip_initial_user=0
+upgrade=0
 
 usage() {
     cat <<'EOF'
@@ -34,6 +35,7 @@ Options:
   --strict-preflight      Turn capacity warnings into installation failures
   --skip-firewall         Do not install the DOCKER-USER ingress policy
   --skip-initial-user     Do not offer interactive administrator creation
+  --upgrade               Preserve configuration while advancing pinned images
   -h, --help              Show this help
 
 Supported reference targets: Ubuntu Server 24.04 LTS and Debian 13.
@@ -81,6 +83,7 @@ while [[ $# -gt 0 ]]; do
         --strict-preflight) strict_preflight=1 ;;
         --skip-firewall) skip_firewall=1 ;;
         --skip-initial-user) skip_initial_user=1 ;;
+        --upgrade) upgrade=1 ;;
         -h|--help) usage; exit 0 ;;
         *) fail "Unknown option: $1" ;;
     esac
@@ -433,6 +436,21 @@ render_runtime() {
         saved_bind_ip="$(sed -nE 's/^AXON_BIND_IP=(.+)$/\1/p' "$CONFIG_ROOT/.env" | head -n 1)"
         [[ "$saved_bind_ip" == "$bind_ip" ]] ||
             fail "Existing Axon runtime is bound to $saved_bind_ip, not $bind_ip. Use the original address or perform an explicit migration."
+        saved_synapse_image="$(sed -nE 's/^SYNAPSE_IMAGE=(.+)$/\1/p' "$CONFIG_ROOT/.env" | head -n 1)"
+        saved_postgres_image="$(sed -nE 's/^POSTGRES_IMAGE=(.+)$/\1/p' "$CONFIG_ROOT/.env" | head -n 1)"
+        saved_nginx_image="$(sed -nE 's/^NGINX_IMAGE=(.+)$/\1/p' "$CONFIG_ROOT/.env" | head -n 1)"
+        if [[ "$saved_synapse_image" != "$synapse_image" ||
+              "$saved_postgres_image" != "$postgres_image" ||
+              "$saved_nginx_image" != "$nginx_image" ]]; then
+            [[ "$upgrade" -eq 1 ]] ||
+                fail "Runtime image references differ from this bundle. Use Axon Control's verified update process or rerun with --upgrade."
+            sed -i \
+                -e "s|^SYNAPSE_IMAGE=.*$|SYNAPSE_IMAGE=$synapse_image|" \
+                -e "s|^POSTGRES_IMAGE=.*$|POSTGRES_IMAGE=$postgres_image|" \
+                -e "s|^NGINX_IMAGE=.*$|NGINX_IMAGE=$nginx_image|" \
+                "$CONFIG_ROOT/.env"
+            log "Updated immutable runtime image references for the verified Axon upgrade."
+        fi
         log "Reusing existing Axon secrets and runtime configuration."
     else
         "$APP_ROOT/bin/Axon.Control" render-runtime \
@@ -485,13 +503,17 @@ install_services() {
         --shell /usr/sbin/nologin \
         axon
     usermod -a -G docker axon
-    install -d -m 0750 -o axon -g axon "$STATE_ROOT"
+    install -d -m 0750 -o axon -g axon "$STATE_ROOT" "$STATE_ROOT/updates"
 
     install -m 0644 "$APP_ROOT/deploy/systemd/axon-stack.service" /etc/systemd/system/axon-stack.service
     install -m 0644 "$APP_ROOT/deploy/systemd/axon-control.service" /etc/systemd/system/axon-control.service
+    install -m 0644 "$APP_ROOT/deploy/systemd/axon-update.service" /etc/systemd/system/axon-update.service
+    install -m 0644 "$APP_ROOT/deploy/systemd/axon-update.path" /etc/systemd/system/axon-update.path
     install -m 0755 "$APP_ROOT/installer/linux/axon" /usr/local/bin/axon
+    install -m 0755 "$APP_ROOT/installer/linux/axon-apply-update" /usr/local/sbin/axon-apply-update
     systemctl daemon-reload
-    systemctl enable axon-stack.service axon-control.service
+    systemctl enable axon-stack.service axon-control.service axon-update.path
+    systemctl start axon-update.path
 }
 
 start_and_test() {
