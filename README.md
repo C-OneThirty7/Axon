@@ -18,8 +18,8 @@ Desktop, or operating-system packages.
 
 | Axon host | Release status | Download this asset | Installation guide |
 |---|---|---|---|
-| Windows 11 x64 | Tested offline release | `Axon-v0.3.0-offline-win-x64.zip` | [Windows installation](docs/installation/INSTALL_WINDOWS.md) |
-| Ubuntu Server 24.04 AMD64 | Validated offline release | `Axon-v0.3.0-offline-ubuntu-24.04-amd64.tar.gz` | [Linux installation](docs/installation/INSTALL_LINUX.md) |
+| Windows 11 x64 | Tested offline release | `Axon-v0.3.1-offline-win-x64.zip` | [Windows installation](docs/installation/INSTALL_WINDOWS.md) |
+| Ubuntu Server 24.04 AMD64 | Validated offline release | `Axon-v0.3.1-offline-ubuntu-24.04-amd64.tar.gz` | [Linux installation](docs/installation/INSTALL_LINUX.md) |
 | Debian 13 AMD64 | Installer and builder supported; no published asset yet | Build the Debian archive from source | [Linux installation](docs/installation/INSTALL_LINUX.md) |
 | Linux ARM64 | Installer and builder supported; no published asset yet | Build the matching ARM64 archive from source | [Linux installation](docs/installation/INSTALL_LINUX.md) |
 | macOS | Development/POC only; no supported offline installer | No end-user asset yet | [macOS status](docs/installation/INSTALL_MACOS.md) |
@@ -30,7 +30,7 @@ and the client's HTTP/TLS policy.
 
 ## Windows quick start
 
-1. Download `Axon-v0.3.0-offline-win-x64.zip`.
+1. Download `Axon-v0.3.1-offline-win-x64.zip`.
 2. Verify its SHA-256 checksum against the release page.
 3. Extract the entire ZIP to a local NTFS folder.
 4. Double-click `Install Axon.cmd` and approve the administrator prompt.
@@ -45,8 +45,8 @@ installing on a routed or multi-NIC host.
 For the published Ubuntu AMD64 bundle:
 
 ```bash
-tar -xzf Axon-v0.3.0-offline-ubuntu-24.04-amd64.tar.gz
-cd Axon-v0.3.0-offline-ubuntu-24.04-amd64
+tar -xzf Axon-v0.3.1-offline-ubuntu-24.04-amd64.tar.gz
+cd Axon-v0.3.1-offline-ubuntu-24.04-amd64
 sudo ./installer/linux/install.sh --offline
 ```
 

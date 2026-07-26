@@ -11,7 +11,7 @@ namespace Axon.Control;
 public static class ProductInfo
 {
     public const string Name = "Axon";
-    public const string Version = "0.3.0";
+    public const string Version = "0.3.1";
     public const string ServerName = "axon.home.arpa";
 }
 

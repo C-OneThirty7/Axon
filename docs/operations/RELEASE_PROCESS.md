@@ -14,12 +14,12 @@ On a Docker-capable build host:
 
 ```bash
 ./packaging/linux/build-release.sh \
-  --version 0.3.0 \
+  --version 0.3.1 \
   --distro ubuntu-24.04 \
   --arch amd64
 
 ./packaging/linux/build-release.sh \
-  --version 0.3.0 \
+  --version 0.3.1 \
   --distro debian-13 \
   --arch amd64
 ```
@@ -28,7 +28,7 @@ ARM64:
 
 ```bash
 ./packaging/linux/build-release.sh \
-  --version 0.3.0 \
+  --version 0.3.1 \
   --distro ubuntu-24.04 \
   --arch arm64
 ```
@@ -62,9 +62,9 @@ Axon release key. The private key is never stored in this repository.
 
 ```bash
 export AXON_RELEASE_SIGNING_KEY=/protected/axon-release-private-key.pem
-./scripts/Sign-ReleaseAsset.sh dist/Axon-v0.3.0-offline-win-x64.zip
+./scripts/Sign-ReleaseAsset.sh dist/Axon-v0.3.1-offline-win-x64.zip
 ./scripts/Sign-ReleaseAsset.sh \
-  dist/Axon-v0.3.0-offline-ubuntu-24.04-amd64.tar.gz
+  dist/Axon-v0.3.1-offline-ubuntu-24.04-amd64.tar.gz
 ```
 
 Upload each archive, checksum, and signature together. The public verification
@@ -95,7 +95,8 @@ The initial public release set is intentionally split:
 - `v0.1.0`: tested Windows 11 x64 offline bundle;
 - `v0.2.0`: validated Ubuntu Server 24.04 AMD64 offline bundle.
 - `v0.3.0`: unified Windows 11 x64 and Ubuntu Server 24.04 AMD64
-  packages with Axon Control release checking.
+  packages with signed click-through updates;
+- `v0.3.1`: Windows launcher version-label correction.
 
 Users should select the release asset from the platform table in the root
 README, not GitHub's automatic source archives.

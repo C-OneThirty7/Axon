@@ -103,7 +103,7 @@ class GuideDoc(BaseDocTemplate):
 def cover(title, subtitle):
     return [
         Spacer(1, 0.35*inch), p("AXON", "H2x"), p(title, "AxonTitle"), p(subtitle, "AxonSubtitle"),
-        rich("<b>v0.3.0 Offline Release</b> &nbsp; | &nbsp; Windows 11 &nbsp; | &nbsp; July 2026", "Bodyx"),
+        rich("<b>v0.3.1 Offline Release</b> &nbsp; | &nbsp; Windows 11 &nbsp; | &nbsp; July 2026", "Bodyx"),
         Spacer(1, 0.12*inch),
         table([
             ["Item", "Value"],
@@ -136,7 +136,7 @@ def build_setup():
         ["Downstream routers", "Static transit addresses", "May provide their own client DHCP/NAT"],
     ], [1.6*inch, 1.9*inch, 2.75*inch])]
     story += [p("Record the Axon IP, adapter, gateway WAN/LAN addresses, downstream client CIDRs, Element-facing URL, and the source addresses Windows sees. Preserve the correct Windows NIC configuration by default.", "Callout")]
-    story += [PageBreak(), p("2. Verify and install", "H1x"), code("1. Extract Axon-v0.3.0-offline-win-x64.zip completely.\n2. Double-click Install Axon.cmd.\n3. Approve the Windows administrator prompt.")]
+    story += [PageBreak(), p("2. Verify and install", "H1x"), code("1. Extract Axon-v0.3.1-offline-win-x64.zip completely.\n2. Double-click Install Axon.cmd.\n3. Approve the Windows administrator prompt.")]
     story += bullets([
         "The launcher bypasses PowerShell policy only for its own process. It does not change the machine policy.",
         "Strict checksums run automatically before bundled installers or images. A failed hash normally means the ZIP must be copied again.",

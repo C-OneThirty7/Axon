@@ -2,7 +2,7 @@
 [CmdletBinding()]
 param(
     [string]$OutputRoot = (Join-Path (Split-Path -Parent $PSScriptRoot) "dist"),
-    [ValidatePattern('^\d+\.\d+\.\d+$')][string]$Version = "0.3.0"
+    [ValidatePattern('^\d+\.\d+\.\d+$')][string]$Version = "0.3.1"
 )
 
 Set-StrictMode -Version Latest

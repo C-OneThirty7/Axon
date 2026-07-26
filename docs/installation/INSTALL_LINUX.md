@@ -50,8 +50,8 @@ Axon does not require the Matrix host to be the clients' default gateway.
 Extract the matching release:
 
 ```bash
-tar -xzf Axon-v0.3.0-offline-ubuntu-24.04-amd64.tar.gz
-cd Axon-v0.3.0-offline-ubuntu-24.04-amd64
+tar -xzf Axon-v0.3.1-offline-ubuntu-24.04-amd64.tar.gz
+cd Axon-v0.3.1-offline-ubuntu-24.04-amd64
 sudo ./installer/linux/install.sh --offline
 ```
 

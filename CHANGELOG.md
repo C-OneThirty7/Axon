@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.3.1] - 2026-07-26
+
+### Fixed
+
+- Windows launcher now reads and displays the bundled release version instead of a stale hard-coded label.
+
 ## [0.3.0] - 2026-07-26
 
 ### Added

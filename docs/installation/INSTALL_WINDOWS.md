@@ -1,4 +1,4 @@
-# Install Axon v0.3.0 on Windows 11
+# Install Axon v0.3.1 on Windows 11
 
 ## Requirements
 
@@ -91,7 +91,7 @@ If it already reports running, choose `End` and then `Run`.
 If Synapse was stopped before sign-out, GUI login cannot authenticate until the
 containers are running. Start the complete `axon` group from Docker Desktop,
 then refresh Axon Control. This host recovery path was proven during the
-v0.3.0 Windows restart test.
+v0.3.1 Windows restart test.
 
 ## Axon Control GUI
 
